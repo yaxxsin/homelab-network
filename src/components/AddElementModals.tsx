@@ -21,6 +21,8 @@ const deviceTypes: { value: HardwareType; label: string }[] = [
     { value: 'mikrotik', label: 'MikroTik Device' },
     { value: 'proxmox', label: 'Proxmox Node' },
     { value: 'docker', label: 'Docker Host' },
+    { value: 'nas', label: 'NAS (Storage)' },
+    { value: 'firewall', label: 'Firewall' },
 ];
 
 export function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModalProps) {
