@@ -1,0 +1,7 @@
+services:
+  homelab-network:
+    build: .
+    container_name: homelab-network
+    ports:
+      - "3300:80"
+    restart: unless-stopped

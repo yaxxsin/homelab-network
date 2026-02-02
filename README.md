@@ -71,3 +71,23 @@ export default defineConfig([
   },
 ])
 ```
+
+## Deployment
+
+Aplikasi ini dapat dijalankan di server menggunakan Docker.
+
+### Menggunakan Docker Compose (Direkomendasikan)
+
+1. Pastikan Docker dan Docker Compose sudah terinstall di server Anda.
+2. Jalankan perintah berikut di direktori proyek:
+   ```bash
+   docker-compose up -d --build
+   ```
+3. Aplikasi akan berjalan di `http://alamat-ip-server:3300`.
+
+### Menggunakan Manual Build
+
+Jika ingin menyajikan file secara manual tanpa Docker:
+1. Jalankan `npm install`.
+2. Jalankan `npm run build`.
+3. Salin isi folder `dist` ke folder root web server Anda (misalnya di `/var/share/nginx/html`).
