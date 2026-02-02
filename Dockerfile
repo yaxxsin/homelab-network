@@ -33,8 +33,8 @@ COPY --from=build /app/server.js ./server.js
 # Buat folder data
 RUN mkdir -p /app/data
 
-# Ekspos port 3300
-EXPOSE 3300
+# Ekspos port 3301
+EXPOSE 3301
 
 # Jalankan server
 CMD ["node", "server.js"]
