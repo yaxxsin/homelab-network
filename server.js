@@ -142,6 +142,10 @@ async function ensureDatabaseSchema() {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Safeguard: Ensure user_id column exists if table existed before multi-user support
+        await client.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;');
+
         console.log('Database schema ensured');
     } catch (err) {
         console.error('Error ensuring database schema (is PostgreSQL running?):', err.message);
