@@ -15,6 +15,8 @@ const deviceTypes: { value: HardwareType; label: string }[] = [
     { value: 'laptop', label: 'Laptop' },
     { value: 'cloud', label: 'Cloud' },
     { value: 'isp', label: 'ISP' },
+    { value: 'cctv', label: 'CCTV' },
+    { value: 'accesspoint', label: 'Access Point' },
 ];
 
 export function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModalProps) {

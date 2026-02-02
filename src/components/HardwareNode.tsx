@@ -13,6 +13,8 @@ import {
     Database,
     Mail,
     Globe2,
+    Camera,
+    Wifi,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { HardwareNodeData, HardwareType } from '../store/networkStore';
@@ -26,6 +28,8 @@ const iconMap: Record<HardwareType, LucideIcon> = {
     laptop: Laptop,
     cloud: Cloud,
     isp: Globe,
+    cctv: Camera,
+    accesspoint: Wifi,
 };
 
 const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
@@ -36,6 +40,8 @@ const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
     laptop: { bg: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', accent: '#a18cd1' },
     cloud: { bg: 'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)', accent: '#66a6ff' },
     isp: { bg: 'linear-gradient(135deg, #434343 0%, #000000 100%)', accent: '#434343' },
+    cctv: { bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', accent: '#ff9a9e' },
+    accesspoint: { bg: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', accent: '#f6d365' },
 };
 
 const statusColors: Record<string, string> = {

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { Edge, Node, OnNodesChange, OnEdgesChange, Connection } from '@xyflow/react';
 import { applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 
-export type HardwareType = 'router' | 'switch' | 'server' | 'pc' | 'laptop' | 'cloud' | 'isp';
+export type HardwareType = 'router' | 'switch' | 'server' | 'pc' | 'laptop' | 'cloud' | 'isp' | 'cctv' | 'accesspoint';
 
 // Application info that lives inside servers
 export interface ApplicationInfo {

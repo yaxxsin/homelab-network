@@ -91,3 +91,17 @@ Jika ingin menyajikan file secara manual tanpa Docker:
 1. Jalankan `npm install`.
 2. Jalankan `npm run build`.
 3. Salin isi folder `dist` ke folder root web server Anda (misalnya di `/var/share/nginx/html`).
+
+## Cara Update ke Server
+
+Jika Anda melakukan perubahan pada kode dan ingin memperbaruinya di server:
+
+1. Tarik (pull) perubahan terbaru ke server Anda (jika menggunakan Git):
+   ```bash
+   git pull origin main
+   ```
+2. Jalankan ulang Docker Compose dengan flag `--build` agar Docker membuat ulang image dengan kode terbaru:
+   ```bash
+   docker-compose up -d --build
+   ```
+   *Docker akan otomatis mematikan kontainer lama, membangun image baru, dan menjalankannya kembali.*
