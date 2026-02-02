@@ -14,6 +14,12 @@ const typeLabels: Record<HardwareType, string> = {
     isp: 'ISP',
     cctv: 'CCTV',
     accesspoint: 'ACCESS POINT',
+    ont: 'ONT (FIBER)',
+    mikrotik: 'MIKROTIK',
+    proxmox: 'PROXMOX NODE',
+    docker: 'DOCKER HOST',
+    nas: 'NAS (STORAGE)',
+    firewall: 'FIREWALL',
 };
 
 export default function PropertiesPanel() {
@@ -170,8 +176,8 @@ export default function PropertiesPanel() {
         );
     }
 
-    const isServer = selectedNode.data.hardwareType === 'server';
-    const isNetworkDevice = selectedNode.data.hardwareType === 'router' || selectedNode.data.hardwareType === 'switch';
+    const isServer = ['server', 'proxmox', 'docker'].includes(selectedNode.data.hardwareType);
+    const isNetworkDevice = ['router', 'switch', 'mikrotik', 'ont'].includes(selectedNode.data.hardwareType);
     const apps = selectedNode.data.applications || [];
     const vlans = selectedNode.data.vlans || [];
 

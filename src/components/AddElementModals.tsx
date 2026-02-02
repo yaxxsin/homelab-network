@@ -17,6 +17,10 @@ const deviceTypes: { value: HardwareType; label: string }[] = [
     { value: 'isp', label: 'ISP' },
     { value: 'cctv', label: 'CCTV' },
     { value: 'accesspoint', label: 'Access Point' },
+    { value: 'ont', label: 'ONT (Fiber Modem)' },
+    { value: 'mikrotik', label: 'MikroTik Device' },
+    { value: 'proxmox', label: 'Proxmox Node' },
+    { value: 'docker', label: 'Docker Host' },
 ];
 
 export function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModalProps) {

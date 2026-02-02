@@ -11,8 +11,8 @@ services:
       - SESSION_SECRET=change-me-to-a-secure-random-string
       - GOOGLE_CLIENT_ID=your-google-client-id
       - GOOGLE_CLIENT_SECRET=your-google-client-secret
-      - TURNSTILE_SITE_KEY=your-turnstile-site-key
-      - TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+      - TURNSTILE_SITE_KEY=0x4AAAAAACW1xz9ORPH5_Guw
+      - TURNSTILE_SECRET_KEY=0x4AAAAAACW1x1yXFpJToeZVHh-yTmhJcHM
       - FRONTEND_URL=http://localhost:3301
       - PGUSER=homelab_user
       - PGHOST=postgres

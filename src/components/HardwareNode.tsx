@@ -10,11 +10,15 @@ import {
     Cloud,
     Globe,
     AppWindow,
-    Database,
     Mail,
     Globe2,
     Camera,
     Wifi,
+    Cpu,
+    Box,
+    Layers,
+    Database,
+    Shield,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { HardwareNodeData, HardwareType } from '../store/networkStore';
@@ -30,6 +34,12 @@ const iconMap: Record<HardwareType, LucideIcon> = {
     isp: Globe,
     cctv: Camera,
     accesspoint: Wifi,
+    ont: Globe,
+    mikrotik: Cpu,
+    proxmox: Layers,
+    docker: Box,
+    nas: Database,
+    firewall: Shield,
 };
 
 const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
@@ -42,6 +52,12 @@ const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
     isp: { bg: 'linear-gradient(135deg, #434343 0%, #000000 100%)', accent: '#434343' },
     cctv: { bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', accent: '#ff9a9e' },
     accesspoint: { bg: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', accent: '#f6d365' },
+    ont: { bg: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', accent: '#00c6ff' },
+    mikrotik: { bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)', accent: '#30cfd0' },
+    proxmox: { bg: 'linear-gradient(135deg, #f83600 0%, #f9d423 100%)', accent: '#f83600' },
+    docker: { bg: 'linear-gradient(135deg, #243949 0%, #517fa4 100%)', accent: '#243949' },
+    nas: { bg: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)', accent: '#0ba360' },
+    firewall: { bg: 'linear-gradient(135deg, #ed213a 0%, #93291e 100%)', accent: '#ed213a' },
 };
 
 const statusColors: Record<string, string> = {
