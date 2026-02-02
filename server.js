@@ -53,7 +53,7 @@ app.post('/api/projects', async (req, res) => {
 });
 
 // Redirect semua route lain ke index.html (untuk SPA)
-app.get('*', async (req, res) => {
+app.get('(.*)', async (req, res) => {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     try {
         await fs.access(indexPath);
