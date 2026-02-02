@@ -489,3 +489,108 @@ export function AddConnectionModal({ isOpen, onClose, onAdd, nodes }: AddConnect
         </div>
     );
 }
+
+interface EditApplicationModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    app: ApplicationInfo;
+    onSave: (updatedApp: ApplicationInfo) => void;
+    onDelete: () => void;
+}
+
+export function EditApplicationModal({ isOpen, onClose, app, onSave, onDelete }: EditApplicationModalProps) {
+    const [name, setName] = useState(app.name);
+    const [type, setType] = useState(app.type);
+    const [port, setPort] = useState(app.port || '');
+    const [protocol, setProtocol] = useState(app.protocol || 'TCP');
+    const [version, setVersion] = useState(app.version || '');
+    const [status, setStatus] = useState(app.status);
+
+    // Update local state when app prop changes
+    useState(() => {
+        setName(app.name);
+        setType(app.type);
+        setPort(app.port || '');
+        setProtocol(app.protocol || 'TCP');
+        setVersion(app.version || '');
+        setStatus(app.status);
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave({
+            name,
+            type,
+            port: port || undefined,
+            protocol: protocol || undefined,
+            version: version || undefined,
+            status: status as 'running' | 'stopped' | 'error',
+        });
+        onClose();
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Edit Application Details</h2>
+                    <button className="modal-close" onClick={onClose}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Application Name:</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                            </div>
+                            <div className="form-group">
+                                <label>Type:</label>
+                                <select value={type} onChange={(e) => setType(e.target.value)}>
+                                    <option value="web">Web</option>
+                                    <option value="database">Database</option>
+                                    <option value="api">API</option>
+                                    <option value="mail">Mail</option>
+                                    <option value="dns">DNS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Port:</label>
+                                <input type="text" value={port} onChange={(e) => setPort(e.target.value)} placeholder="e.g., 80" />
+                            </div>
+                            <div className="form-group">
+                                <label>Protocol:</label>
+                                <input type="text" value={protocol} onChange={(e) => setProtocol(e.target.value)} placeholder="e.g., TCP" />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Version:</label>
+                                <input type="text" value={version} onChange={(e) => setVersion(e.target.value)} placeholder="e.g., 1.0.0" />
+                            </div>
+                            <div className="form-group">
+                                <label>Status:</label>
+                                <select value={status} onChange={(e) => setStatus(e.target.value as any)}>
+                                    <option value="running">Running</option>
+                                    <option value="stopped">Stopped</option>
+                                    <option value="error">Error</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-delete-modal" onClick={() => { if (confirm('Delete application?')) { onDelete(); onClose(); } }}>
+                            <Trash2 size={16} /> Delete
+                        </button>
+                        <div style={{ flex: 1 }}></div>
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}

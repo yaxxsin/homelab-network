@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Trash2, Wifi, WifiOff, AlertTriangle, Link2, Plus } from 'lucide-react';
 import { useNetworkStore } from '../store/networkStore';
 import type { HardwareType, CustomEdge, ApplicationInfo, VlanInfo } from '../store/networkStore';
+import { EditApplicationModal } from './AddElementModals';
 
 const typeLabels: Record<HardwareType, string> = {
     router: 'ROUTER',
@@ -29,6 +30,7 @@ export default function PropertiesPanel() {
     // State for adding new app/vlan
     const [showAddApp, setShowAddApp] = useState(false);
     const [newApp, setNewApp] = useState<ApplicationInfo>({ name: '', type: 'web', port: '', status: 'running' });
+    const [editingApp, setEditingApp] = useState<{ index: number; app: ApplicationInfo } | null>(null);
     const [showAddVlan, setShowAddVlan] = useState(false);
     const [newVlan, setNewVlan] = useState<VlanInfo>({ id: '', name: '', ipRange: '', gateway: '' });
 
@@ -184,6 +186,14 @@ export default function PropertiesPanel() {
         updateNode(selectedNode.id, { applications: apps.filter((_, i) => i !== index) });
     };
 
+    const handleSaveEditedApp = (updatedApp: ApplicationInfo) => {
+        if (!editingApp || !selectedNode) return;
+        const newApps = [...apps];
+        newApps[editingApp.index] = updatedApp;
+        updateNode(selectedNode.id, { applications: newApps });
+        setEditingApp(null);
+    };
+
     const handleAddVlan = () => {
         if (!newVlan.id) return;
         updateNode(selectedNode.id, { vlans: [...vlans, newVlan] });
@@ -262,14 +272,22 @@ export default function PropertiesPanel() {
                             <div className="info-list">
                                 {apps.map((app, i) => (
                                     <div key={i} className="info-item-editable">
-                                        <div className="info-main">
+                                        <div className="info-main" onClick={() => setEditingApp({ index: i, app })}>
                                             <span className="info-label">{app.name}</span>
                                             <span className={`info-status ${app.status}`}>{app.status}</span>
                                         </div>
-                                        <button className="btn-remove-small" onClick={() => handleRemoveApp(i)}><Trash2 size={12} /></button>
                                     </div>
                                 ))}
                             </div>
+                        )}
+                        {editingApp && (
+                            <EditApplicationModal
+                                isOpen={!!editingApp}
+                                onClose={() => setEditingApp(null)}
+                                app={editingApp.app}
+                                onSave={handleSaveEditedApp}
+                                onDelete={() => handleRemoveApp(editingApp.index)}
+                            />
                         )}
                         {showAddApp && (
                             <div className="add-form">
