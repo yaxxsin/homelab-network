@@ -138,12 +138,20 @@ async function ensureDatabaseSchema(retries = 10) {
             await client.query(`
                 CREATE TABLE IF NOT EXISTS projects (
                     id SERIAL PRIMARY KEY,
-                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                     data JSONB NOT NULL,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
+            // Clean up any projects without a user (legacy data)
+            await client.query('DELETE FROM projects WHERE user_id IS NULL');
             await client.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;');
+            // Try to set NOT NULL if it was added without it
+            try {
+                await client.query('ALTER TABLE projects ALTER COLUMN user_id SET NOT NULL;');
+            } catch (e) {
+                console.log('Could not enforce NOT NULL on user_id yet, likely legacy data exists');
+            }
 
             console.log('Database schema ensured and validated');
             return;
@@ -258,9 +266,10 @@ app.get('/api/projects', isAuthenticated, async (req, res) => {
 app.post('/api/projects', isAuthenticated, async (req, res) => {
     try {
         const { projects } = req.body;
+        const projectsToSave = projects || [];
         await pool.query('BEGIN');
         await pool.query('DELETE FROM projects WHERE user_id = $1', [req.user.id]);
-        await pool.query('INSERT INTO projects (user_id, data) VALUES ($1, $2)', [req.user.id, JSON.stringify({ projects })]);
+        await pool.query('INSERT INTO projects (user_id, data) VALUES ($1, $2)', [req.user.id, JSON.stringify({ projects: projectsToSave })]);
         await pool.query('COMMIT');
         res.json({ success: true });
     } catch (err) {

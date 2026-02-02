@@ -105,6 +105,7 @@ interface NetworkState {
     _sync: () => void;
     _syncToServer: () => Promise<void>;
     initStore: () => Promise<void>;
+    resetStore: () => void;
 }
 
 let nodeIdCounter = Date.now();
@@ -126,13 +127,28 @@ export const useNetworkStore = create<NetworkState>()(
                     const response = await fetch('/api/projects');
                     if (response.ok) {
                         const data = await response.json();
-                        if (data.projects) {
+                        // If user has data on server, use it. Otherwise, start fresh or keep what's here?
+                        // Actually, if they just logged in, we should probably favor server data.
+                        if (data && data.projects) {
                             set({ projects: data.projects });
                         }
                     }
                 } catch (err) {
                     console.error('Failed to load projects from server:', err);
                 }
+            },
+
+            resetStore: () => {
+                set({
+                    projects: [],
+                    currentProjectId: null,
+                    nodes: [],
+                    edges: [],
+                    selectedNode: null,
+                    selectedEdge: null,
+                    connectionMode: false
+                });
+                // Clear localStorage manually if needed, but Zustand persist does it on set
             },
 
             _syncToServer: async () => {

@@ -168,16 +168,25 @@ function Flow() {
 export default function App() {
   const currentProjectId = useNetworkStore((state) => state.currentProjectId);
   const initStore = useNetworkStore((state) => state.initStore);
+  const resetStore = useNetworkStore((state) => state.resetStore);
 
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
   const checkAuth = useAuthStore((state) => state.checkAuth);
 
-  // Initialize store and check auth on mount
+  // Initialize auth on mount
   useEffect(() => {
     checkAuth();
-    initStore();
-  }, [initStore, checkAuth]);
+  }, [checkAuth]);
+
+  // Sync store based on user state
+  useEffect(() => {
+    if (user) {
+      initStore();
+    } else if (!isLoading) {
+      resetStore();
+    }
+  }, [user, isLoading, initStore, resetStore]);
 
   if (isLoading) {
     return (
