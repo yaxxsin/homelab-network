@@ -52,8 +52,8 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
-// Redirect semua route lain ke index.html (untuk SPA)
-app.get('(.*)', async (req, res) => {
+// Fallback untuk semua route lain (SPA) - Sangat kompatibel dengan Express 5
+app.use(async (req, res) => {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     try {
         await fs.access(indexPath);
