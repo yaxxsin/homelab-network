@@ -110,6 +110,12 @@ function Flow() {
       isp: '#475569',
       cctv: '#f472b6',
       accesspoint: '#fb923c',
+      ont: '#0072ff',
+      mikrotik: '#330867',
+      proxmox: '#f83600',
+      docker: '#243949',
+      nas: '#0ba360',
+      firewall: '#ed213a',
     };
     return colors[node.data.hardwareType] || '#888';
   };
