@@ -106,6 +106,8 @@ function Flow() {
       laptop: '#8b5cf6',
       cloud: '#06b6d4',
       isp: '#475569',
+      cctv: '#f472b6',
+      accesspoint: '#fb923c',
     };
     return colors[node.data.hardwareType] || '#888';
   };

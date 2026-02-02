@@ -11,6 +11,8 @@ const typeLabels: Record<HardwareType, string> = {
     laptop: 'LAPTOP',
     cloud: 'CLOUD',
     isp: 'ISP',
+    cctv: 'CCTV',
+    accesspoint: 'ACCESS POINT',
 };
 
 export default function PropertiesPanel() {
