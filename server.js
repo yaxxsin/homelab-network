@@ -107,50 +107,57 @@ app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Pastikan skema database ada
-async function ensureDatabaseSchema() {
+async function ensureDatabaseSchema(retries = 10) {
     let client;
-    try {
-        client = await pool.connect();
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS session (
-                sid varchar NOT NULL PRIMARY KEY COLLATE "default",
-                sess json NOT NULL,
-                expire timestamp(6) NOT NULL
-            ) WITH (OIDS=FALSE);
-        `);
+    while (retries > 0) {
+        try {
+            client = await pool.connect();
+            console.log('Database connected successfully');
 
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                google_id TEXT UNIQUE,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT,
-                name TEXT,
-                avatar_url TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS session (
+                    sid varchar NOT NULL PRIMARY KEY COLLATE "default",
+                    sess json NOT NULL,
+                    expire timestamp(6) NOT NULL
+                ) WITH (OIDS=FALSE);
+            `);
 
-        // Safeguard: Ensure password column exists if table was created earlier
-        await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;');
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    google_id TEXT UNIQUE,
+                    email TEXT UNIQUE NOT NULL,
+                    password TEXT,
+                    name TEXT,
+                    avatar_url TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;');
 
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS projects (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                data JSONB NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS projects (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                    data JSONB NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+            await client.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;');
 
-        // Safeguard: Ensure user_id column exists if table existed before multi-user support
-        await client.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;');
-
-        console.log('Database schema ensured');
-    } catch (err) {
-        console.error('Error ensuring database schema (is PostgreSQL running?):', err.message);
-    } finally {
-        if (client) client.release();
+            console.log('Database schema ensured and validated');
+            return;
+        } catch (err) {
+            retries -= 1;
+            console.error(`Database connection failed. Retries left: ${retries}. Error: ${err.message}`);
+            if (retries === 0) {
+                console.error('Final database connection attempt failed. Starting server in degraded mode...');
+                return;
+            }
+            await new Promise(res => setTimeout(res, 3000));
+        } finally {
+            if (client) client.release();
+        }
     }
 }
 
