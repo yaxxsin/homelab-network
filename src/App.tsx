@@ -17,6 +17,8 @@ import Sidebar from './components/Sidebar';
 import PropertiesPanel from './components/PropertiesPanel';
 import Dashboard from './components/Dashboard';
 import { useNetworkStore } from './store/networkStore';
+import { useAuthStore } from './store/authStore';
+import Login from './components/Login';
 import type { HardwareNode as HardwareNodeType, HardwareType, CustomEdge } from './store/networkStore';
 import './App.css';
 
@@ -161,10 +163,28 @@ export default function App() {
   const currentProjectId = useNetworkStore((state) => state.currentProjectId);
   const initStore = useNetworkStore((state) => state.initStore);
 
-  // Initialize store from server on mount
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+
+  // Initialize store and check auth on mount
   useEffect(() => {
+    checkAuth();
     initStore();
-  }, [initStore]);
+  }, [initStore, checkAuth]);
+
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Initializing secure session...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   if (!currentProjectId) {
     return <Dashboard />;

@@ -8,7 +8,10 @@ import {
     Trash2,
     Monitor,
     ChevronLeft,
+    ChevronRight,
+    Image,
 } from 'lucide-react';
+import { toPng } from 'html-to-image';
 import type { LucideIcon } from 'lucide-react';
 import type { HardwareType, HardwareNodeData, CustomEdge } from '../store/networkStore';
 import { useNetworkStore } from '../store/networkStore';
@@ -38,6 +41,16 @@ const addElementButtons: AddElementButton[] = [
 export default function Sidebar() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [activeModal, setActiveModal] = useState<ModalType>(null);
+    const [isCollapsed, setIsCollapsed] = useState(true);
+    const [isPinned, setIsPinned] = useState(false);
+
+    const handleMouseEnter = () => {
+        if (!isPinned) setIsCollapsed(false);
+    };
+
+    const handleMouseLeave = () => {
+        if (!isPinned) setIsCollapsed(true);
+    };
 
     const nodes = useNetworkStore((state) => state.nodes);
     const addNodeFromData = useNetworkStore((state) => state.addNodeFromData);
@@ -71,6 +84,27 @@ export default function Sidebar() {
         URL.revokeObjectURL(url);
     };
 
+    const handleExportPNG = async () => {
+        const viewport = document.querySelector('.react-flow__viewport') as HTMLElement;
+        if (!viewport) return;
+
+        try {
+            const dataUrl = await toPng(viewport, {
+                backgroundColor: '#f8fafc',
+                quality: 1,
+                pixelRatio: 2,
+            });
+
+            const link = document.createElement('a');
+            link.download = `network-topology-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Error exporting PNG:', error);
+            alert('Failed to export PNG. Please try again.');
+        }
+    };
+
     const handleImport = () => {
         fileInputRef.current?.click();
     };
@@ -92,18 +126,27 @@ export default function Sidebar() {
 
     return (
         <>
-            <aside className="sidebar">
+            <aside
+                className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${isPinned ? 'pinned' : ''}`}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
+
                 <div className="sidebar-header">
                     <button className="btn-back-projects" onClick={backToDashboard}>
                         <ChevronLeft size={16} />
-                        Back to Projects
+                        {!isCollapsed && "Back to Projects"}
                     </button>
-                    <h2>{currentProject?.name || 'Network Designer'}</h2>
-                    <p>{currentProject?.description || 'Design your network topology'}</p>
+                    {!isCollapsed && (
+                        <>
+                            <h2>{currentProject?.name || 'Network Designer'}</h2>
+                            <p>{currentProject?.description || 'Design your network topology'}</p>
+                        </>
+                    )}
                 </div>
 
                 <div className="add-elements-section">
-                    <h3>Add Elements</h3>
+                    <h3>{isCollapsed ? "Add" : "Add Elements"}</h3>
                     <div className="add-elements-list">
                         {addElementButtons.map((btn) => (
                             <button
@@ -111,48 +154,64 @@ export default function Sidebar() {
                                 className="add-element-btn"
                                 style={{ backgroundColor: btn.bgColor }}
                                 onClick={() => setActiveModal(btn.type)}
+                                title={isCollapsed ? btn.label : ""}
                             >
                                 <btn.icon size={16} />
-                                {btn.label}
+                                {!isCollapsed && btn.label}
                             </button>
                         ))}
                     </div>
                 </div>
 
                 <div className="io-section">
-                    <h3>Topology</h3>
+                    <h3>{isCollapsed ? "IO" : "Topology"}</h3>
                     <div className="io-buttons">
-                        <button className="io-btn export" onClick={handleExport}>
-                            <Download size={16} /> Export JSON
+                        <button className="io-btn export" onClick={handleExport} title={isCollapsed ? "Export JSON" : ""}>
+                            <Download size={16} /> {!isCollapsed && "Export JSON"}
                         </button>
-                        <button className="io-btn import" onClick={handleImport}>
-                            <Upload size={16} /> Import JSON
+                        <button className="io-btn export-png" onClick={handleExportPNG} title={isCollapsed ? "Export PNG" : ""}>
+                            <Image size={16} /> {!isCollapsed && "Export PNG"}
                         </button>
-                        <button className="io-btn clear" onClick={clearAll}>
-                            <Trash2 size={16} /> Clear All
+                        <button className="io-btn import" onClick={handleImport} title={isCollapsed ? "Import JSON" : ""}>
+                            <Upload size={16} /> {!isCollapsed && "Import JSON"}
                         </button>
-                        <button
-                            className="io-btn delete-project"
-                            onClick={() => {
-                                if (confirm('Are you sure you want to delete this entire project? This action cannot be undone.')) {
-                                    deleteProject(currentProjectId!);
-                                }
-                            }}
-                        >
-                            <Trash2 size={16} /> Delete Project
+                        <button className="io-btn clear" onClick={clearAll} title={isCollapsed ? "Clear All" : ""}>
+                            <Trash2 size={16} /> {!isCollapsed && "Clear All"}
                         </button>
+                        {!isCollapsed && (
+                            <button
+                                className="io-btn delete-project"
+                                onClick={() => {
+                                    if (confirm('Are you sure you want to delete this entire project? This action cannot be undone.')) {
+                                        deleteProject(currentProjectId!);
+                                    }
+                                }}
+                            >
+                                <Trash2 size={16} /> Delete Project
+                            </button>
+                        )}
                     </div>
                     <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
                 </div>
 
-                <div className="sidebar-footer">
-                    <div className="legend">
-                        <div className="legend-item"><span className="legend-dot online"></span><span>Online</span></div>
-                        <div className="legend-item"><span className="legend-dot offline"></span><span>Offline</span></div>
-                        <div className="legend-item"><span className="legend-dot warning"></span><span>Warning</span></div>
+                {!isCollapsed && (
+                    <div className="sidebar-footer">
+                        <div className="legend">
+                            <div className="legend-item"><span className="legend-dot online"></span><span>Online</span></div>
+                            <div className="legend-item"><span className="legend-dot offline"></span><span>Offline</span></div>
+                            <div className="legend-item"><span className="legend-dot warning"></span><span>Warning</span></div>
+                        </div>
+                        <div className="autosave-indicator">✓ Autosave enabled</div>
                     </div>
-                    <div className="autosave-indicator">✓ Autosave enabled</div>
-                </div>
+                )}
+
+                <button
+                    className={`sidebar-pin-btn ${isPinned ? 'active' : ''}`}
+                    onClick={() => setIsPinned(!isPinned)}
+                    title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
+                >
+                    {isPinned ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                </button>
             </aside>
 
             <AddNetworkDeviceModal

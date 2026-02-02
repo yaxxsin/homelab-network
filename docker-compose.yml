@@ -8,6 +8,12 @@ services:
       - ./data:/app/data
     environment:
       - DATABASE_URL=postgres://homelab_user:homelab_password@postgres:5432/homelab_db
+      - SESSION_SECRET=change-me-to-a-secure-random-string
+      - GOOGLE_CLIENT_ID=your-google-client-id
+      - GOOGLE_CLIENT_SECRET=your-google-client-secret
+      - TURNSTILE_SITE_KEY=your-turnstile-site-key
+      - TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+      - FRONTEND_URL=http://localhost:3301
       - PGUSER=homelab_user
       - PGHOST=postgres
       - PGPASSWORD=homelab_password
