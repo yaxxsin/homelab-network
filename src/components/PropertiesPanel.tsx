@@ -1,0 +1,313 @@
+import { useState } from 'react';
+import { X, Trash2, Wifi, WifiOff, AlertTriangle, Link2, Plus } from 'lucide-react';
+import { useNetworkStore } from '../store/networkStore';
+import type { HardwareType, CustomEdge, ApplicationInfo, VlanInfo } from '../store/networkStore';
+
+const typeLabels: Record<HardwareType, string> = {
+    router: 'ROUTER',
+    switch: 'SWITCH',
+    server: 'SERVER',
+    pc: 'PC',
+    laptop: 'LAPTOP',
+    cloud: 'CLOUD',
+    isp: 'ISP',
+};
+
+export default function PropertiesPanel() {
+    const selectedNode = useNetworkStore((state) => state.selectedNode);
+    const selectedEdge = useNetworkStore((state) => state.selectedEdge);
+    const updateNode = useNetworkStore((state) => state.updateNode);
+    const deleteNode = useNetworkStore((state) => state.deleteNode);
+    const setSelectedNode = useNetworkStore((state) => state.setSelectedNode);
+    const setSelectedEdge = useNetworkStore((state) => state.setSelectedEdge);
+    const deleteEdge = useNetworkStore((state) => state.deleteEdge);
+    const updateEdge = useNetworkStore((state) => state.updateEdge);
+    const nodes = useNetworkStore((state) => state.nodes);
+
+    // State for adding new app/vlan
+    const [showAddApp, setShowAddApp] = useState(false);
+    const [newApp, setNewApp] = useState<ApplicationInfo>({ name: '', type: 'web', port: '', status: 'running' });
+    const [showAddVlan, setShowAddVlan] = useState(false);
+    const [newVlan, setNewVlan] = useState<VlanInfo>({ id: '', name: '', ipRange: '', gateway: '' });
+
+    // Edge editing panel
+    if (selectedEdge) {
+        const edge = selectedEdge as CustomEdge;
+        const sourceNode = nodes.find(n => n.id === edge.source);
+        const targetNode = nodes.find(n => n.id === edge.target);
+
+        return (
+            <aside className="properties-panel">
+                <div className="panel-header">
+                    <h3>Connection Properties</h3>
+                    <button className="close-btn" onClick={() => setSelectedEdge(null)}>
+                        <X size={18} />
+                    </button>
+                </div>
+
+                <div className="panel-content">
+                    <div className="connection-info">
+                        <div className="connection-endpoint">
+                            <span className="endpoint-label">From</span>
+                            <span className="endpoint-value">{sourceNode?.data.label || 'Unknown'}</span>
+                        </div>
+                        <div className="connection-arrow">
+                            <Link2 size={20} />
+                        </div>
+                        <div className="connection-endpoint">
+                            <span className="endpoint-label">To</span>
+                            <span className="endpoint-value">{targetNode?.data.label || 'Unknown'}</span>
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Label</label>
+                        <input
+                            type="text"
+                            value={(edge.label as string) || ''}
+                            onChange={(e) => updateEdge(edge.id, { label: e.target.value })}
+                            placeholder="Connection label"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Bandwidth</label>
+                        <input
+                            type="text"
+                            value={edge.bandwidth || ''}
+                            onChange={(e) => updateEdge(edge.id, { bandwidth: e.target.value })}
+                            placeholder="e.g., 1 Gbps"
+                        />
+                    </div>
+
+                    {edge.networkInfo && (
+                        <>
+                            <div className="section-title">Network Configuration</div>
+                            <div className="form-group">
+                                <label>IP Address</label>
+                                <input type="text" value={edge.networkInfo.ip || ''} onChange={(e) => updateEdge(edge.id, { networkInfo: { ...edge.networkInfo, ip: e.target.value } })} placeholder="192.168.1.0" />
+                            </div>
+                            <div className="form-group">
+                                <label>Subnet Mask</label>
+                                <input type="text" value={edge.networkInfo.subnetMask || ''} onChange={(e) => updateEdge(edge.id, { networkInfo: { ...edge.networkInfo, subnetMask: e.target.value } })} placeholder="255.255.255.0" />
+                            </div>
+                            <div className="form-group">
+                                <label>Gateway</label>
+                                <input type="text" value={edge.networkInfo.gateway || ''} onChange={(e) => updateEdge(edge.id, { networkInfo: { ...edge.networkInfo, gateway: e.target.value } })} placeholder="192.168.1.1" />
+                            </div>
+                            <div className="form-group">
+                                <label>DNS</label>
+                                <input type="text" value={edge.networkInfo.dns || ''} onChange={(e) => updateEdge(edge.id, { networkInfo: { ...edge.networkInfo, dns: e.target.value } })} placeholder="8.8.8.8" />
+                            </div>
+                        </>
+                    )}
+
+                    <div className="form-group">
+                        <label>Animation</label>
+                        <div className="style-buttons">
+                            <button
+                                className={`style-btn ${edge.animationType === 'dashed' || !edge.animationType ? 'active' : ''}`}
+                                onClick={() => updateEdge(edge.id, { animationType: 'dashed' })}
+                            >
+                                Dashed
+                            </button>
+                            <button
+                                className={`style-btn ${edge.animationType === 'dot' ? 'active' : ''}`}
+                                onClick={() => updateEdge(edge.id, { animationType: 'dot' })}
+                            >
+                                Dot
+                            </button>
+                            <button
+                                className={`style-btn ${edge.animationType === 'none' ? 'active' : ''}`}
+                                onClick={() => updateEdge(edge.id, { animationType: 'none' })}
+                            >
+                                None
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Line Type</label>
+                        <div className="style-buttons">
+                            <button
+                                className={`style-btn ${edge.lineType === 'bezier' || !edge.lineType ? 'active' : ''}`}
+                                onClick={() => updateEdge(edge.id, { lineType: 'bezier' })}
+                            >
+                                Bezier
+                            </button>
+                            <button
+                                className={`style-btn ${edge.lineType === 'smoothstep' ? 'active' : ''}`}
+                                onClick={() => updateEdge(edge.id, { lineType: 'smoothstep' })}
+                            >
+                                Smooth Steps
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="panel-actions">
+                        <button className="delete-btn" onClick={() => deleteEdge(edge.id)}>
+                            <Trash2 size={16} />
+                            Delete Connection
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        );
+    }
+
+    // Node editing panel
+    if (!selectedNode) {
+        return (
+            <aside className="properties-panel empty">
+                <div className="empty-state">
+                    <p>Select a device or connection to view properties</p>
+                </div>
+            </aside>
+        );
+    }
+
+    const isServer = selectedNode.data.hardwareType === 'server';
+    const isNetworkDevice = selectedNode.data.hardwareType === 'router' || selectedNode.data.hardwareType === 'switch';
+    const apps = selectedNode.data.applications || [];
+    const vlans = selectedNode.data.vlans || [];
+
+    const handleAddApp = () => {
+        if (!newApp.name) return;
+        updateNode(selectedNode.id, { applications: [...apps, newApp] });
+        setNewApp({ name: '', type: 'web', port: '', status: 'running' });
+        setShowAddApp(false);
+    };
+
+    const handleRemoveApp = (index: number) => {
+        updateNode(selectedNode.id, { applications: apps.filter((_, i) => i !== index) });
+    };
+
+    const handleAddVlan = () => {
+        if (!newVlan.id) return;
+        updateNode(selectedNode.id, { vlans: [...vlans, newVlan] });
+        setNewVlan({ id: '', name: '', ipRange: '', gateway: '' });
+        setShowAddVlan(false);
+    };
+
+    const handleRemoveVlan = (index: number) => {
+        updateNode(selectedNode.id, { vlans: vlans.filter((_, i) => i !== index) });
+    };
+
+    return (
+        <aside className="properties-panel">
+            <div className="panel-header">
+                <h3>Device Properties</h3>
+                <button className="close-btn" onClick={() => setSelectedNode(null)}>
+                    <X size={18} />
+                </button>
+            </div>
+
+            <div className="panel-content">
+                <div className="form-group">
+                    <label>Name</label>
+                    <input type="text" value={selectedNode.data.label} onChange={(e) => updateNode(selectedNode.id, { label: e.target.value })} placeholder="Device name" />
+                </div>
+
+                <div className="form-group">
+                    <label>IP Address</label>
+                    <input type="text" value={selectedNode.data.ip || ''} onChange={(e) => updateNode(selectedNode.id, { ip: e.target.value })} placeholder="192.168.1.1" />
+                </div>
+
+                <div className="form-group">
+                    <label>Type</label>
+                    <div className="type-badge">{typeLabels[selectedNode.data.hardwareType] || 'DEVICE'}</div>
+                </div>
+
+                {/* VLANs for Network Devices */}
+                {isNetworkDevice && (
+                    <div className="form-group">
+                        <div className="section-header">
+                            <label>VLANs</label>
+                            <button className="btn-add-small" onClick={() => setShowAddVlan(true)}><Plus size={12} /> Add</button>
+                        </div>
+                        {vlans.length > 0 && (
+                            <div className="info-list">
+                                {vlans.map((v, i) => (
+                                    <div key={i} className="info-item-editable">
+                                        <div className="info-main">
+                                            <span className="info-label">VLAN {v.id}</span>
+                                            <span className="info-value">{v.name}</span>
+                                        </div>
+                                        <button className="btn-remove-small" onClick={() => handleRemoveVlan(i)}><Trash2 size={12} /></button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {showAddVlan && (
+                            <div className="add-form">
+                                <input type="text" placeholder="VLAN ID" value={newVlan.id} onChange={(e) => setNewVlan({ ...newVlan, id: e.target.value })} style={{ width: '60px' }} />
+                                <input type="text" placeholder="Name" value={newVlan.name} onChange={(e) => setNewVlan({ ...newVlan, name: e.target.value })} />
+                                <button className="btn-confirm" onClick={handleAddVlan}>Add</button>
+                                <button className="btn-cancel-small" onClick={() => setShowAddVlan(false)}>✕</button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Applications for Servers */}
+                {isServer && (
+                    <div className="form-group">
+                        <div className="section-header">
+                            <label>Applications</label>
+                            <button className="btn-add-small" onClick={() => setShowAddApp(true)}><Plus size={12} /> Add</button>
+                        </div>
+                        {apps.length > 0 && (
+                            <div className="info-list">
+                                {apps.map((app, i) => (
+                                    <div key={i} className="info-item-editable">
+                                        <div className="info-main">
+                                            <span className="info-label">{app.name}</span>
+                                            <span className={`info-status ${app.status}`}>{app.status}</span>
+                                        </div>
+                                        <button className="btn-remove-small" onClick={() => handleRemoveApp(i)}><Trash2 size={12} /></button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {showAddApp && (
+                            <div className="add-form">
+                                <input type="text" placeholder="App name" value={newApp.name} onChange={(e) => setNewApp({ ...newApp, name: e.target.value })} />
+                                <select value={newApp.type} onChange={(e) => setNewApp({ ...newApp, type: e.target.value })}>
+                                    <option value="web">Web</option>
+                                    <option value="database">Database</option>
+                                    <option value="api">API</option>
+                                    <option value="mail">Mail</option>
+                                </select>
+                                <input type="text" placeholder="Port" value={newApp.port} onChange={(e) => setNewApp({ ...newApp, port: e.target.value })} style={{ width: '60px' }} />
+                                <button className="btn-confirm" onClick={handleAddApp}>Add</button>
+                                <button className="btn-cancel-small" onClick={() => setShowAddApp(false)}>✕</button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <div className="form-group">
+                    <label>Status</label>
+                    <div className="status-buttons">
+                        <button className={`status-btn online ${selectedNode.data.status === 'online' ? 'active' : ''}`} onClick={() => updateNode(selectedNode.id, { status: 'online' })}>
+                            <Wifi size={14} /> Online
+                        </button>
+                        <button className={`status-btn offline ${selectedNode.data.status === 'offline' ? 'active' : ''}`} onClick={() => updateNode(selectedNode.id, { status: 'offline' })}>
+                            <WifiOff size={14} /> Offline
+                        </button>
+                        <button className={`status-btn warning ${selectedNode.data.status === 'warning' ? 'active' : ''}`} onClick={() => updateNode(selectedNode.id, { status: 'warning' })}>
+                            <AlertTriangle size={14} /> Warning
+                        </button>
+                    </div>
+                </div>
+
+                <div className="panel-actions">
+                    <button className="delete-btn" onClick={() => deleteNode(selectedNode.id)}>
+                        <Trash2 size={16} />
+                        Delete Device
+                    </button>
+                </div>
+            </div>
+        </aside>
+    );
+}

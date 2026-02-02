@@ -1,0 +1,489 @@
+import { useState } from 'react';
+import { X, Plus, Trash2 } from 'lucide-react';
+import type { HardwareType, HardwareNodeData, CustomEdge, VlanInfo, ApplicationInfo } from '../store/networkStore';
+
+export type ModalType = 'device' | 'connection' | 'server' | 'network' | null;
+
+interface AddDeviceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (data: Partial<HardwareNodeData> & { hardwareType: HardwareType }) => void;
+}
+
+const deviceTypes: { value: HardwareType; label: string }[] = [
+    { value: 'pc', label: 'PC' },
+    { value: 'laptop', label: 'Laptop' },
+    { value: 'cloud', label: 'Cloud' },
+    { value: 'isp', label: 'ISP' },
+];
+
+export function AddDeviceModal({ isOpen, onClose, onAdd }: AddDeviceModalProps) {
+    const [name, setName] = useState('');
+    const [deviceType, setDeviceType] = useState<HardwareType>('pc');
+    const [ip, setIp] = useState('');
+    const [subnetMask, setSubnetMask] = useState('');
+    const [macAddress, setMacAddress] = useState('');
+    const [location, setLocation] = useState('');
+    const [description, setDescription] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onAdd({
+            label: name || `${deviceType} Device`,
+            hardwareType: deviceType,
+            ip: ip || undefined,
+            status: 'online',
+            subnetMask: subnetMask || undefined,
+            macAddress: macAddress || undefined,
+            location: location || undefined,
+            description: description || undefined,
+        });
+        resetForm();
+        onClose();
+    };
+
+    const resetForm = () => {
+        setName('');
+        setDeviceType('pc');
+        setIp('');
+        setSubnetMask('');
+        setMacAddress('');
+        setLocation('');
+        setDescription('');
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Add New Device</h2>
+                    <button className="modal-close" onClick={onClose}>
+                        <X size={20} />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Device Name:</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter device name" />
+                            </div>
+                            <div className="form-group">
+                                <label>Device Type:</label>
+                                <select value={deviceType} onChange={(e) => setDeviceType(e.target.value as HardwareType)}>
+                                    {deviceTypes.map((type) => (
+                                        <option key={type.value} value={type.value}>{type.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>IP Address:</label>
+                                <input type="text" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="192.168.1.1" />
+                            </div>
+                            <div className="form-group">
+                                <label>Subnet Mask:</label>
+                                <input type="text" value={subnetMask} onChange={(e) => setSubnetMask(e.target.value)} placeholder="255.255.255.0" />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>MAC Address:</label>
+                                <input type="text" value={macAddress} onChange={(e) => setMacAddress(e.target.value)} placeholder="00:1A:2B:3C:4D:5E" />
+                            </div>
+                            <div className="form-group">
+                                <label>Location:</label>
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Office A" />
+                            </div>
+                        </div>
+                        <div className="form-group full-width">
+                            <label>Description:</label>
+                            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter description..." rows={2} />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Add Device</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// Network Device Modal (Router/Switch) with VLANs
+interface AddNetworkDeviceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (data: Partial<HardwareNodeData> & { hardwareType: HardwareType }) => void;
+}
+
+export function AddNetworkDeviceModal({ isOpen, onClose, onAdd }: AddNetworkDeviceModalProps) {
+    const [name, setName] = useState('');
+    const [deviceType, setDeviceType] = useState<'router' | 'switch'>('router');
+    const [ip, setIp] = useState('');
+    const [ports, setPorts] = useState('');
+    const [vlans, setVlans] = useState<VlanInfo[]>([]);
+    const [location, setLocation] = useState('');
+
+    const addVlan = () => {
+        setVlans([...vlans, { id: '', name: '', ipRange: '', gateway: '' }]);
+    };
+
+    const updateVlan = (index: number, field: keyof VlanInfo, value: string) => {
+        const updated = [...vlans];
+        updated[index] = { ...updated[index], [field]: value };
+        setVlans(updated);
+    };
+
+    const removeVlan = (index: number) => {
+        setVlans(vlans.filter((_, i) => i !== index));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onAdd({
+            label: name || `${deviceType}`,
+            hardwareType: deviceType,
+            ip: ip || undefined,
+            ports: ports ? parseInt(ports) : undefined,
+            vlans: vlans.filter(v => v.id),
+            location: location || undefined,
+            status: 'online',
+        });
+        resetForm();
+        onClose();
+    };
+
+    const resetForm = () => {
+        setName(''); setDeviceType('router'); setIp(''); setPorts(''); setVlans([]); setLocation('');
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Add Network Device</h2>
+                    <button className="modal-close" onClick={onClose}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Device Name:</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Main Router" />
+                            </div>
+                            <div className="form-group">
+                                <label>Device Type:</label>
+                                <select value={deviceType} onChange={(e) => setDeviceType(e.target.value as 'router' | 'switch')}>
+                                    <option value="router">Router</option>
+                                    <option value="switch">Switch</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Management IP:</label>
+                                <input type="text" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="192.168.1.1" />
+                            </div>
+                            <div className="form-group">
+                                <label>Ports:</label>
+                                <input type="text" value={ports} onChange={(e) => setPorts(e.target.value)} placeholder="24" />
+                            </div>
+                        </div>
+
+                        <div className="section-divider">
+                            <span>VLANs Configuration</span>
+                            <button type="button" className="btn-add-small" onClick={addVlan}><Plus size={14} /> Add VLAN</button>
+                        </div>
+
+                        {vlans.map((vlan, index) => (
+                            <div key={index} className="nested-form-row">
+                                <input type="text" placeholder="VLAN ID" value={vlan.id} onChange={(e) => updateVlan(index, 'id', e.target.value)} style={{ width: '80px' }} />
+                                <input type="text" placeholder="Name" value={vlan.name} onChange={(e) => updateVlan(index, 'name', e.target.value)} />
+                                <input type="text" placeholder="IP Range" value={vlan.ipRange} onChange={(e) => updateVlan(index, 'ipRange', e.target.value)} />
+                                <input type="text" placeholder="Gateway" value={vlan.gateway} onChange={(e) => updateVlan(index, 'gateway', e.target.value)} />
+                                <button type="button" className="btn-remove-small" onClick={() => removeVlan(index)}><Trash2 size={14} /></button>
+                            </div>
+                        ))}
+
+                        <div className="form-group full-width">
+                            <label>Location:</label>
+                            <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Server Room" />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Add Network Device</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// Server Modal with Applications
+interface AddServerModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (data: Partial<HardwareNodeData> & { hardwareType: 'server' }) => void;
+}
+
+export function AddServerModal({ isOpen, onClose, onAdd }: AddServerModalProps) {
+    const [name, setName] = useState('');
+    const [ip, setIp] = useState('');
+    const [subnetMask, setSubnetMask] = useState('');
+    const [dns, setDns] = useState('');
+    const [applications, setApplications] = useState<ApplicationInfo[]>([]);
+    const [location, setLocation] = useState('');
+
+    const addApp = () => {
+        setApplications([...applications, { name: '', type: 'web', port: '', protocol: 'TCP', status: 'running' }]);
+    };
+
+    const updateApp = (index: number, field: keyof ApplicationInfo, value: string) => {
+        const updated = [...applications];
+        updated[index] = { ...updated[index], [field]: value } as ApplicationInfo;
+        setApplications(updated);
+    };
+
+    const removeApp = (index: number) => {
+        setApplications(applications.filter((_, i) => i !== index));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onAdd({
+            label: name || 'Server',
+            hardwareType: 'server',
+            ip: ip || undefined,
+            subnetMask: subnetMask || undefined,
+            dns: dns || undefined,
+            applications: applications.filter(a => a.name),
+            location: location || undefined,
+            status: 'online',
+        });
+        resetForm();
+        onClose();
+    };
+
+    const resetForm = () => {
+        setName(''); setIp(''); setSubnetMask(''); setDns(''); setApplications([]); setLocation('');
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Add Server</h2>
+                    <button className="modal-close" onClick={onClose}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Server Name:</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Web Server 01" />
+                            </div>
+                            <div className="form-group">
+                                <label>Location:</label>
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Rack A1" />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>IP Address:</label>
+                                <input type="text" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="192.168.1.10" />
+                            </div>
+                            <div className="form-group">
+                                <label>Subnet Mask:</label>
+                                <input type="text" value={subnetMask} onChange={(e) => setSubnetMask(e.target.value)} placeholder="255.255.255.0" />
+                            </div>
+                        </div>
+                        <div className="form-group full-width">
+                            <label>DNS Servers:</label>
+                            <input type="text" value={dns} onChange={(e) => setDns(e.target.value)} placeholder="8.8.8.8, 8.8.4.4" />
+                        </div>
+
+                        <div className="section-divider">
+                            <span>Applications</span>
+                            <button type="button" className="btn-add-small" onClick={addApp}><Plus size={14} /> Add App</button>
+                        </div>
+
+                        {applications.map((app, index) => (
+                            <div key={index} className="nested-form-row">
+                                <input type="text" placeholder="Name" value={app.name} onChange={(e) => updateApp(index, 'name', e.target.value)} />
+                                <select value={app.type} onChange={(e) => updateApp(index, 'type', e.target.value)}>
+                                    <option value="web">Web</option>
+                                    <option value="database">Database</option>
+                                    <option value="api">API</option>
+                                    <option value="mail">Mail</option>
+                                    <option value="dns">DNS</option>
+                                </select>
+                                <input type="text" placeholder="Port" value={app.port} onChange={(e) => updateApp(index, 'port', e.target.value)} style={{ width: '70px' }} />
+                                <select value={app.status} onChange={(e) => updateApp(index, 'status', e.target.value)}>
+                                    <option value="running">Running</option>
+                                    <option value="stopped">Stopped</option>
+                                    <option value="error">Error</option>
+                                </select>
+                                <button type="button" className="btn-remove-small" onClick={() => removeApp(index)}><Trash2 size={14} /></button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Add Server</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// Connection Modal with Network Info
+interface AddConnectionModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (data: Partial<CustomEdge> & { source: string; target: string }) => void;
+    nodes: { id: string; label: string }[];
+}
+
+export function AddConnectionModal({ isOpen, onClose, onAdd, nodes }: AddConnectionModalProps) {
+    const [sourceId, setSourceId] = useState('');
+    const [targetId, setTargetId] = useState('');
+    const [label, setLabel] = useState('');
+    const [connectionType, setConnectionType] = useState<'ethernet' | 'fiber' | 'wireless' | 'serial'>('ethernet');
+    const [bandwidth, setBandwidth] = useState('');
+    const [ip, setIp] = useState('');
+    const [subnetMask, setSubnetMask] = useState('');
+    const [gateway, setGateway] = useState('');
+    const [dns, setDns] = useState('');
+    const [vlanId, setVlanId] = useState('');
+    const [mtu, setMtu] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!sourceId || !targetId || sourceId === targetId) {
+            alert('Please select different source and target devices');
+            return;
+        }
+        onAdd({
+            source: sourceId,
+            target: targetId,
+            label: label || undefined,
+            connectionType,
+            bandwidth: bandwidth || undefined,
+            networkInfo: {
+                ip: ip || undefined,
+                subnetMask: subnetMask || undefined,
+                gateway: gateway || undefined,
+                dns: dns || undefined,
+                vlanId: vlanId || undefined,
+                mtu: mtu || undefined,
+            },
+        });
+        resetForm();
+        onClose();
+    };
+
+    const resetForm = () => {
+        setSourceId(''); setTargetId(''); setLabel(''); setConnectionType('ethernet');
+        setBandwidth(''); setIp(''); setSubnetMask(''); setGateway(''); setDns(''); setVlanId(''); setMtu('');
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Add Connection</h2>
+                    <button className="modal-close" onClick={onClose}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Source Device:</label>
+                                <select value={sourceId} onChange={(e) => setSourceId(e.target.value)}>
+                                    <option value="">Select device</option>
+                                    {nodes.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Target Device:</label>
+                                <select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
+                                    <option value="">Select device</option>
+                                    {nodes.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Connection Type:</label>
+                                <select value={connectionType} onChange={(e) => setConnectionType(e.target.value as typeof connectionType)}>
+                                    <option value="ethernet">Ethernet</option>
+                                    <option value="fiber">Fiber Optic</option>
+                                    <option value="wireless">Wireless</option>
+                                    <option value="serial">Serial</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Bandwidth:</label>
+                                <input type="text" value={bandwidth} onChange={(e) => setBandwidth(e.target.value)} placeholder="1 Gbps" />
+                            </div>
+                        </div>
+
+                        <div className="section-divider"><span>Network Configuration</span></div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>IP Address:</label>
+                                <input type="text" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="192.168.1.0" />
+                            </div>
+                            <div className="form-group">
+                                <label>Subnet Mask:</label>
+                                <input type="text" value={subnetMask} onChange={(e) => setSubnetMask(e.target.value)} placeholder="255.255.255.0" />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Gateway:</label>
+                                <input type="text" value={gateway} onChange={(e) => setGateway(e.target.value)} placeholder="192.168.1.1" />
+                            </div>
+                            <div className="form-group">
+                                <label>DNS:</label>
+                                <input type="text" value={dns} onChange={(e) => setDns(e.target.value)} placeholder="8.8.8.8" />
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>VLAN ID:</label>
+                                <input type="text" value={vlanId} onChange={(e) => setVlanId(e.target.value)} placeholder="100" />
+                            </div>
+                            <div className="form-group">
+                                <label>MTU:</label>
+                                <input type="text" value={mtu} onChange={(e) => setMtu(e.target.value)} placeholder="1500" />
+                            </div>
+                        </div>
+                        <div className="form-group full-width">
+                            <label>Label:</label>
+                            <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Connection label" />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Add Connection</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
