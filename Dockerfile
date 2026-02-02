@@ -16,13 +16,25 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve
-FROM nginx:stable-alpine
+FROM node:20-alpine
 
-# Salin hasil build dari stage 1 ke direktori default Nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Ekspos port 80
-EXPOSE 80
+# Salin package.json dan package-lock.json
+COPY package*.json ./
 
-# Jalankan Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Install hanya production dependencies
+RUN npm install --omit=dev
+
+# Salin hasil build dan server.js
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/server.js ./server.js
+
+# Buat folder data
+RUN mkdir -p /app/data
+
+# Ekspos port 3300
+EXPOSE 3300
+
+# Jalankan server
+CMD ["node", "server.js"]

@@ -103,6 +103,8 @@ interface NetworkState {
     importTopology: (json: string) => boolean;
     clearAll: () => void;
     _sync: () => void;
+    _syncToServer: () => Promise<void>;
+    initStore: () => Promise<void>;
 }
 
 let nodeIdCounter = Date.now();
@@ -118,6 +120,33 @@ export const useNetworkStore = create<NetworkState>()(
             selectedNode: null,
             selectedEdge: null,
             connectionMode: false,
+
+            initStore: async () => {
+                try {
+                    const response = await fetch('/api/projects');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.projects) {
+                            set({ projects: data.projects });
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to load projects from server:', err);
+                }
+            },
+
+            _syncToServer: async () => {
+                try {
+                    const { projects } = get();
+                    await fetch('/api/projects', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ projects }),
+                    });
+                } catch (err) {
+                    console.error('Failed to sync projects to server:', err);
+                }
+            },
 
             createProject: (name, description) => {
                 const newProject: Project = {
@@ -156,6 +185,7 @@ export const useNetworkStore = create<NetworkState>()(
                     projects: state.projects.filter(p => p.id !== id),
                     currentProjectId: state.currentProjectId === id ? null : state.currentProjectId,
                 }));
+                get()._syncToServer();
             },
 
             backToDashboard: () => {
@@ -183,6 +213,7 @@ export const useNetworkStore = create<NetworkState>()(
                             : p
                     );
                     set({ projects: updatedProjects });
+                    get()._syncToServer();
                 }
             },
 

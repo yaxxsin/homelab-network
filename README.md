@@ -105,3 +105,23 @@ Jika Anda melakukan perubahan pada kode dan ingin memperbaruinya di server:
    docker-compose up -d --build
    ```
    *Docker akan otomatis mematikan kontainer lama, membangun image baru, dan menjalankannya kembali.*
+
+## Troubleshooting
+
+### Error: `KeyError: 'ContainerConfig'`
+Jika Anda menemui error ini saat update, biasanya disebabkan oleh versi `docker-compose` lama (v1) yang bentrok dengan metadata container baru.
+
+**Solusinya:** Hapus container secara paksa sebelum menjalankan kembali:
+
+1. Hapus container yang lama:
+   ```bash
+   docker rm -f homelab-network
+   ```
+2. Jalankan kembali:
+   ```bash
+   docker-compose up -d --build
+   ```
+3. (Opsional) Sangat disarankan untuk menggunakan perintah Docker V2 (tanpa tanda hubung) jika sudah terinstall:
+   ```bash
+   docker compose up -d --build
+   ```

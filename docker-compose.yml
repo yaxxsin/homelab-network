@@ -3,5 +3,7 @@ services:
     build: .
     container_name: homelab-network
     ports:
-      - "3300:80"
+      - "3300:3300"
+    volumes:
+      - ./data:/app/data
     restart: unless-stopped

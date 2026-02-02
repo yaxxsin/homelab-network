@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import type { DragEvent } from 'react';
 import {
   ReactFlow,
@@ -159,6 +159,12 @@ function Flow() {
 
 export default function App() {
   const currentProjectId = useNetworkStore((state) => state.currentProjectId);
+  const initStore = useNetworkStore((state) => state.initStore);
+
+  // Initialize store from server on mount
+  useEffect(() => {
+    initStore();
+  }, [initStore]);
 
   if (!currentProjectId) {
     return <Dashboard />;
