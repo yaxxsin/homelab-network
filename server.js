@@ -111,8 +111,13 @@ async function ensureDatabaseSchema() {
     let client;
     try {
         client = await pool.connect();
-        await client.query('CREATE TABLE IF NOT EXISTS session (sid varchar NOT NULL COLLATE "default", sess json NOT NULL, expire timestamp(6) NOT NULL) WITH (OIDS=FALSE);');
-        await client.query('ALTER TABLE IF EXISTS session ADD CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE;');
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS session (
+                sid varchar NOT NULL PRIMARY KEY COLLATE "default",
+                sess json NOT NULL,
+                expire timestamp(6) NOT NULL
+            ) WITH (OIDS=FALSE);
+        `);
 
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
@@ -209,8 +214,12 @@ app.post('/auth/register', async (req, res) => {
             res.json(result.rows[0]);
         });
     } catch (err) {
-        console.error('Registration error:', err);
-        res.status(500).json({ error: 'Registration error' });
+        console.error('Registration Error Details:', {
+            message: err.message,
+            code: err.code,
+            detail: err.detail
+        });
+        res.status(500).json({ error: `Registration error: ${err.message}` });
     }
 });
 
