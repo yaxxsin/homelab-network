@@ -200,7 +200,8 @@ app.post('/auth/register', async (req, res) => {
     // Verify Cloudflare Turnstile token
     try {
         const secretKey = process.env.TURNSTILE_SECRET_KEY;
-        if (secretKey) {
+        // Only verify if secretKey is provided and not a placeholder
+        if (secretKey && !secretKey.includes('your-turnstile')) {
             const verifyRes = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
                 secret: secretKey,
                 response: token
