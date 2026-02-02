@@ -53,8 +53,14 @@ app.post('/api/projects', async (req, res) => {
 });
 
 // Redirect semua route lain ke index.html (untuk SPA)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+app.get('*', async (req, res) => {
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    try {
+        await fs.access(indexPath);
+        res.sendFile(indexPath);
+    } catch {
+        res.status(404).send('Aplikasi belum di-build. Jalankan "npm run build" terlebih dahulu.');
+    }
 });
 
 ensureDataFile().then(() => {
