@@ -348,90 +348,58 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
         return res.status(400).json({ error: 'Uptime Kuma credentials not configured' });
     }
 
+    console.log(`Fetching monitors from ${url}...`);
+
     const socket = io(url, {
         reconnection: false,
         timeout: 10000,
+        transports: ['websocket', 'polling'] // Ensure compatibility
     });
 
-    let authenticated = false;
-
-    socket.on('connect', () => {
-        socket.emit('login', {
-            username,
-            password,
-        }, (res) => {
-            if (res.ok) {
-                authenticated = true;
-                socket.emit('getMonitorList', (monitorList) => {
-                    const simplifiedList = Object.values(monitorList).map(m => ({
-                        id: m.id,
-                        name: m.name,
-                        type: m.type,
-                    }));
-                    socket.disconnect();
-                    res.json ? res.json(simplifiedList) : null; // Safety check
-                });
-            } else {
+    try {
+        const monitors = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
                 socket.disconnect();
-            }
-        });
-    });
+                reject(new Error('Timeout connecting to Uptime Kuma'));
+            }, 10000);
 
-    // Handle timeout or connection failure within the request scope
-    const timeout = setTimeout(() => {
-        if (!authenticated) {
-            socket.disconnect();
-            if (!res.headersSent) res.status(504).json({ error: 'Timeout connecting to Uptime Kuma' });
-        }
-    }, 10000);
-
-    socket.on('connect_error', (err) => {
-        socket.disconnect();
-        clearTimeout(timeout);
-        if (!res.headersSent) res.status(500).json({ error: `Connection error: ${err.message}` });
-    });
-
-    // Modified getMonitorList emission to handle the response properly
-    socket.on('login', (loginRes) => {
-        if (!loginRes.ok) {
-            socket.disconnect();
-            clearTimeout(timeout);
-            if (!res.headersSent) res.status(401).json({ error: 'Invalid Uptime Kuma credentials' });
-        }
-    });
-
-    // Wrap the socket logic in a promise to handle the response cleanly
-    const monitors = await new Promise((resolve, reject) => {
-        socket.on('connect', () => {
-            socket.emit('login', { username, password }, (authRes) => {
-                if (authRes.ok) {
-                    socket.emit('getMonitorList', (list) => {
+            socket.on('connect', () => {
+                console.log('Socket connected to Uptime Kuma, logging in...');
+                socket.emit('login', { username, password }, (authRes) => {
+                    if (authRes && authRes.ok) {
+                        console.log('Login successful, fetching monitor list...');
+                        socket.emit('getMonitorList', (list) => {
+                            clearTimeout(timeout);
+                            socket.disconnect();
+                            resolve(Object.values(list).map(m => ({
+                                id: m.id,
+                                name: m.name,
+                                status: m.status === 1 ? 'online' : (m.status === 0 ? 'offline' : 'warning'),
+                                latency: m.ping ? `${m.ping}ms` : null,
+                                msg: m.msg
+                            })));
+                        });
+                    } else {
+                        clearTimeout(timeout);
                         socket.disconnect();
-                        resolve(Object.values(list).map(m => ({
-                            id: m.id,
-                            name: m.name,
-                            status: m.status === 1 ? 'online' : (m.status === 0 ? 'offline' : 'warning'),
-                            latency: m.ping ? `${m.ping}ms` : null,
-                            msg: m.msg // Added msg field
-                        })));
-                    });
-                } else {
-                    socket.disconnect();
-                    reject(new Error('Auth failed'));
-                }
+                        reject(new Error(authRes?.msg || 'Authentication failed'));
+                    }
+                });
+            });
+
+            socket.on('connect_error', (err) => {
+                clearTimeout(timeout);
+                socket.disconnect();
+                reject(new Error(`Connection error: ${err.message}`));
             });
         });
-        socket.on('connect_error', (err) => reject(err));
-        setTimeout(() => reject(new Error('Timeout')), 10000);
-    }).catch(err => {
-        console.error('Uptime Kuma API Error:', err.message);
-        return null;
-    });
 
-    if (monitors) {
-        if (!res.headersSent) res.json(monitors);
-    } else {
-        if (!res.headersSent) res.status(500).json({ error: 'Failed to fetch monitors from Uptime Kuma' });
+        res.json(monitors);
+    } catch (err) {
+        console.error('Uptime Kuma API Error:', err.message);
+        if (!res.headersSent) {
+            res.status(500).json({ error: err.message });
+        }
     }
 });
 
