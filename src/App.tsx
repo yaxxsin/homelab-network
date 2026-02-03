@@ -22,6 +22,7 @@ import Login from './components/Login';
 import type { HardwareNode as HardwareNodeType, HardwareType, CustomEdge } from './store/networkStore';
 import { RotateCcw, RotateCw } from 'lucide-react';
 import './App.css';
+import Clock from './components/Clock';
 
 const nodeTypes = {
   hardware: HardwareNode,
@@ -171,6 +172,8 @@ function Flow() {
           <span className="toolbar-status">
             {connectionMode ? 'Connection Mode Active' : 'Select or Drag to Edit'}
           </span>
+          <div className="toolbar-divider" />
+          <Clock />
         </div>
         <ReactFlow
           nodes={nodes}

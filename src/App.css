@@ -531,6 +531,39 @@ body {
   padding-right: 4px;
 }
 
+/* Clock Styles */
+.clock-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.3s ease;
+}
+
+.dashboard-header .clock-container {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.clock-icon {
+  color: var(--accent-primary);
+}
+
+.canvas-toolbar .clock-icon {
+  color: var(--accent-secondary);
+}
+
+.clock-time {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 .connection-mode-banner {
   position: absolute;
   top: 16px;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
     Plus,
     Trash2,
-    Clock,
+    Clock as ClockIcon,
     Layout,
     Search,
     Network,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNetworkStore } from '../store/networkStore';
 import { useAuthStore } from '../store/authStore';
+import Clock from './Clock';
 
 export default function Dashboard() {
     const user = useAuthStore((state) => state.user);
@@ -77,6 +78,7 @@ export default function Dashboard() {
                             <Plus size={20} />
                             New Project
                         </button>
+                        <Clock />
 
                         {user && (
                             <div className="user-profile">
@@ -132,7 +134,7 @@ export default function Dashboard() {
                                     <div className="project-card-footer">
                                         <div className="project-meta">
                                             <div className="meta-item">
-                                                <Clock size={14} />
+                                                <ClockIcon size={14} />
                                                 <span>{formatTime(project.updatedAt)}</span>
                                             </div>
                                             <div className="meta-item">
