@@ -92,7 +92,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: true, // Reflect request origin for better flexibility in local/host network
     credentials: true
 }));
 
@@ -109,7 +109,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'homelab_secret_key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 30 * 24 * 60 * 60 * 1000 }
+    cookie: {
+        secure: false, // Set to false for local/homelab network without HTTPS
+        maxAge: 30 * 24 * 60 * 60 * 1000
+    }
 }));
 
 app.use(passport.initialize());
@@ -200,11 +203,22 @@ app.post('/auth/logout', (req, res) => {
 });
 
 app.post('/auth/login', (req, res, next) => {
+    console.log(`Login Attempt: ${req.body.email}`);
     passport.authenticate('local', (err, user, info) => {
-        if (err) return next(err);
-        if (!user) return res.status(401).json({ error: info.message });
+        if (err) {
+            console.error('Login Auth Error:', err);
+            return next(err);
+        }
+        if (!user) {
+            console.warn('Login Failed:', info.message);
+            return res.status(401).json({ error: info.message });
+        }
         req.logIn(user, (err) => {
-            if (err) return next(err);
+            if (err) {
+                console.error('Login Session Error:', err);
+                return next(err);
+            }
+            console.log('Login Successful:', user.email);
             res.json(user);
         });
     })(req, res, next);
@@ -379,9 +393,13 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
                 console.log('Socket connected to Uptime Kuma, logging in...');
                 socket.emit('login', { username, password }, (authRes) => {
                     if (authRes && authRes.ok) {
-                        console.log('Login successful, fetching monitor list...');
-                        socket.emit('getMonitorList', (list) => {
+                        console.log('Login successful, waiting for monitor list...');
+
+                        // Some Uptime Kuma versions send monitorList immediately or via event
+                        const handleMonitorList = (list) => {
+                            console.log('Uptime Kuma Monitor List Received');
                             clearTimeout(timeout);
+                            socket.off('monitorList', handleMonitorList);
                             socket.disconnect();
                             resolve(Object.values(list).map(m => ({
                                 id: m.id,
@@ -390,10 +408,18 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
                                 latency: m.ping ? `${m.ping}ms` : null,
                                 msg: m.msg
                             })));
+                        };
+
+                        socket.on('monitorList', handleMonitorList);
+
+                        // Also try the standard emit if it's available as a direct response
+                        socket.emit('getMonitorList', (list) => {
+                            if (list) handleMonitorList(list);
                         });
                     } else {
                         clearTimeout(timeout);
                         socket.disconnect();
+                        console.warn('Uptime Kuma Login Failed:', authRes?.msg);
                         reject(new Error(authRes?.msg || 'Authentication failed'));
                     }
                 });
