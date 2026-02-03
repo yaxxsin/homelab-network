@@ -1,127 +1,73 @@
-# React + TypeScript + Vite
+# Homelab Network Designer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, interactive web application for planning and visualizing network infrastructure. Built with a focus on aesthetics and professional features.
 
-Currently, two official plugins are available:
+![Homelab Network Designer](https://via.placeholder.com/800x400?text=Homelab+Network+Designer+UI)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+- **Interactive Editor**: Drag-and-drop infrastructure components with real-time connectivity.
+- **WIB Clock**: Integrated real-time Western Indonesian Time (WIB) display.
+- **Undo/Redo System**: Full history support for all design actions.
+- **Advanced Node Types**:
+  - **Servers**: Monitor hosted applications and resource details.
+  - **Network Devices**: Manage VLANs and logical segmentation.
+- **Dynamic Connections**: Multiple line styles (Bezier, Smooth Step) and animations (Dashed, Dots).
+- **Project Dashboard**: Manage multiple infrastructure projects with ease.
+- **Premium UI**: Modern glassmorphism design with Outfit typography.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Technical Stack
 
-## Expanding the ESLint configuration
+- **Frontend**: React + TypeScript + Vite
+- **Diagrams**: React Flow (@xyflow/react)
+- **State Management**: Zustand (Persist + Undo/Redo history)
+- **Styling**: Vanilla CSS with a custom design system
+- **Icons**: Lucide React
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📦 Installation & Setup
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd "Homelab network"
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. **Set up environment variables**:
+   Create a `.env` file based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+5. **Build for production**:
+   ```bash
+   npm run build
+   ```
+
+## 🐳 Deployment with Docker
+
+The application is container-ready and includes a pre-configured Docker setup.
+
+### Using Docker Compose
+
+```bash
+docker compose up -d --build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The application will be available at `http://localhost:3300`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 📄 License
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Internal Project / All Rights Reserved.
 
-## Deployment
-
-Aplikasi ini dapat dijalankan di server menggunakan Docker.
-
-### Menggunakan Docker Compose (Direkomendasikan)
-
-1. Pastikan Docker dan Docker Compose sudah terinstall di server Anda.
-2. Jalankan perintah berikut di direktori proyek:
-   ```bash
-   docker-compose up -d --build
-   ```
-3. Aplikasi akan berjalan di `http://alamat-ip-server:3300`.
-
-### Menggunakan Manual Build
-
-Jika ingin menyajikan file secara manual tanpa Docker:
-1. Jalankan `npm install`.
-2. Jalankan `npm run build`.
-3. Salin isi folder `dist` ke folder root web server Anda (misalnya di `/var/share/nginx/html`).
-
-## Cara Update ke Server
-
-Jika Anda melakukan perubahan pada kode dan ingin memperbaruinya di server:
-
-1. Tarik (pull) perubahan terbaru ke server Anda (jika menggunakan Git):
-   ```bash
-   git pull origin main
-   ```
-2. Jalankan ulang Docker Compose dengan flag `--build` agar Docker membuat ulang image dengan kode terbaru:
-   ```bash
-   docker-compose up -d --build
-   ```
-   *Docker akan otomatis mematikan kontainer lama, membangun image baru, dan menjalankannya kembali.*
-
-## Troubleshooting
-
-### Error: `KeyError: 'ContainerConfig'`
-Jika Anda menemui error ini saat update, biasanya disebabkan oleh versi `docker-compose` lama (v1) yang bentrok dengan metadata container baru.
-
-**Solusinya:** Hapus container secara paksa sebelum menjalankan kembali:
-
-1. Hapus container yang lama:
-   ```bash
-   docker rm -f homelab-network
-   ```
-2. Jalankan kembali:
-   ```bash
-   docker-compose up -d --build
-   ```
-3. (Opsional) Sangat disarankan untuk menggunakan perintah Docker V2 (tanpa tanda hubung) jika sudah terinstall:
-   ```bash
-   docker compose up -d --build
-   ```
+---
+*Developed for advanced infrastructure management.*

@@ -26,7 +26,9 @@ The **Homelab Network Designer** is a premium, specialized web application built
 - **Network Configuration**: Define bandwidth, connection types (Ethernet, Fiber, Wireless), and specific network info per link.
 - **Real-time Synchronization**: The UI updates instantly as you type data into the Properties Panel.
 
-### 4. Professional Aesthetics
+### 4. Professional Aesthetics & Utilities
+- **Real-time WIB Clock**: Displays the current Western Indonesian Time in both the Dashboard and the Network Designer.
+- **Undo/Redo System**: Robust history management allowing users to revert or repeat design changes.
 - **Modern UI**: Built with a clean SF/Outfit typography and a glassmorphism-inspired design.
 - **Hardware Icons**: Intuitive iconography using `lucide-react`.
 - **Responsive Layout**: Sidebar for tools, main canvas for design, and Properties Panel for deep configuration.
