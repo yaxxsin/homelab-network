@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Trash2, Link2, Plus } from 'lucide-react';
 import { useNetworkStore } from '../store/networkStore';
 import type { HardwareType, CustomEdge, ApplicationInfo, VlanInfo } from '../store/networkStore';
-import { EditApplicationModal } from './AddElementModals';
+import { EditApplicationModal, EditCustomDetailModal } from './AddElementModals';
 
 const typeLabels: Record<HardwareType, string> = {
     router: 'ROUTER',
@@ -39,6 +39,8 @@ export default function PropertiesPanel() {
     const [editingApp, setEditingApp] = useState<{ index: number; app: ApplicationInfo } | null>(null);
     const [showAddVlan, setShowAddVlan] = useState(false);
     const [newVlan, setNewVlan] = useState<VlanInfo>({ id: '', name: '', ipRange: '', gateway: '' });
+    const [editingDetail, setEditingDetail] = useState<{ id: string; key: string; value: string } | null>(null);
+    const [showAddDetail, setShowAddDetail] = useState(false);
     const [monitors, setMonitors] = useState<{ id: number; name: string; status: string; latency: string | null }[]>([]);
     const [isLoadingMonitors, setIsLoadingMonitors] = useState(false);
     const [monitorError, setMonitorError] = useState<string | null>(null);
@@ -291,6 +293,44 @@ export default function PropertiesPanel() {
                     <div className="type-badge">{typeLabels[selectedNode.data.hardwareType] || 'DEVICE'}</div>
                 </div>
 
+                {/* Enhanced Fields */}
+                <div className="form-group">
+                    <label>Operating System</label>
+                    <input
+                        type="text"
+                        value={selectedNode.data.os || ''}
+                        onChange={(e) => updateNode(selectedNode.id, { os: e.target.value })}
+                        placeholder="e.g. RouterOS, Ubuntu 22.04"
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label>Serial Number</label>
+                    <input
+                        type="text"
+                        value={selectedNode.data.serialNumber || ''}
+                        onChange={(e) => updateNode(selectedNode.id, { serialNumber: e.target.value })}
+                        placeholder="SN123456789"
+                    />
+                </div>
+
+                {isServer && (
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>CPU</label>
+                            <input type="text" value={selectedNode.data.cpu || ''} onChange={(e) => updateNode(selectedNode.id, { cpu: e.target.value })} placeholder="8 Cores" />
+                        </div>
+                        <div className="form-group">
+                            <label>RAM</label>
+                            <input type="text" value={selectedNode.data.ram || ''} onChange={(e) => updateNode(selectedNode.id, { ram: e.target.value })} placeholder="16GB" />
+                        </div>
+                        <div className="form-group">
+                            <label>Storage</label>
+                            <input type="text" value={selectedNode.data.storage || ''} onChange={(e) => updateNode(selectedNode.id, { storage: e.target.value })} placeholder="512GB SSD" />
+                        </div>
+                    </div>
+                )}
+
                 {/* VLANs for Network Devices */}
                 {isNetworkDevice && (
                     <div className="form-group">
@@ -365,19 +405,15 @@ export default function PropertiesPanel() {
                             </div>
                         )}
                     </div>
-                )}                {/* Custom Details CRUD */}
+                )}
+
+                {/* Custom Details CRUD */}
                 <div className="form-group border-t border-slate-700/50 pt-4 mt-2">
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-indigo-400 font-bold text-xs tracking-wider uppercase">Custom Details</label>
                         <button
                             className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-[10px] px-2 py-1 rounded transition-colors flex items-center gap-1"
-                            onClick={() => {
-                                const key = prompt('Detail Name (e.g. Serial No):');
-                                const value = prompt('Value:');
-                                if (key && value) {
-                                    useNetworkStore.getState().addNodeDetail(selectedNode.id, key, value);
-                                }
-                            }}
+                            onClick={() => setShowAddDetail(true)}
                         >
                             <Plus size={10} /> Add
                         </button>
@@ -386,12 +422,7 @@ export default function PropertiesPanel() {
                     <div className="space-y-1">
                         {(selectedNode.data.customDetails || []).map((detail) => (
                             <div key={detail.id} className="group relative bg-slate-800/40 hover:bg-slate-800/60 p-2 rounded-md border border-slate-700/30 transition-all">
-                                <div className="flex flex-col pr-6 cursor-pointer" onClick={() => {
-                                    const newValue = prompt(`Edit ${detail.key}:`, detail.value);
-                                    if (newValue !== null) {
-                                        useNetworkStore.getState().updateNodeDetail(selectedNode.id, detail.id, detail.key, newValue);
-                                    }
-                                }}>
+                                <div className="flex flex-col pr-6 cursor-pointer" onClick={() => setEditingDetail(detail)}>
                                     <span className="text-[10px] text-slate-500 uppercase font-medium">{detail.key}</span>
                                     <span className="text-sm text-slate-200">{detail.value}</span>
                                 </div>
@@ -410,6 +441,26 @@ export default function PropertiesPanel() {
                         )}
                     </div>
                 </div>
+
+                {/* Modals for Custom Details */}
+                {editingDetail && (
+                    <EditCustomDetailModal
+                        isOpen={!!editingDetail}
+                        onClose={() => setEditingDetail(null)}
+                        detail={editingDetail}
+                        onSave={(updated) => useNetworkStore.getState().updateNodeDetail(selectedNode.id, updated.id, updated.key, updated.value)}
+                        onDelete={() => useNetworkStore.getState().deleteNodeDetail(selectedNode.id, editingDetail.id)}
+                    />
+                )}
+                {showAddDetail && (
+                    <EditCustomDetailModal
+                        isOpen={showAddDetail}
+                        onClose={() => setShowAddDetail(false)}
+                        detail={null}
+                        isNew
+                        onSave={(newDetail) => useNetworkStore.getState().addNodeDetail(selectedNode.id, newDetail.key, newDetail.value)}
+                    />
+                )}
 
                 <div className="panel-actions">
                     <button className="delete-btn" onClick={() => deleteNode(selectedNode.id)}>

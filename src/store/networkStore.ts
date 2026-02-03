@@ -44,6 +44,12 @@ export interface HardwareNodeData extends Record<string, unknown> {
     uptimeKumaId?: string;
     latency?: string | number;
     customDetails?: { id: string, key: string, value: string }[];
+    // Extended Info
+    os?: string;
+    serialNumber?: string;
+    cpu?: string;
+    ram?: string;
+    storage?: string;
 }
 
 export type HardwareNode = Node<HardwareNodeData, 'hardware'>;

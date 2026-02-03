@@ -136,6 +136,8 @@ export function AddNetworkDeviceModal({ isOpen, onClose, onAdd }: AddNetworkDevi
     const [ports, setPorts] = useState('');
     const [vlans, setVlans] = useState<VlanInfo[]>([]);
     const [location, setLocation] = useState('');
+    const [os, setOs] = useState('');
+    const [serialNumber, setSerialNumber] = useState('');
 
     const addVlan = () => {
         setVlans([...vlans, { id: '', name: '', ipRange: '', gateway: '' }]);
@@ -160,6 +162,8 @@ export function AddNetworkDeviceModal({ isOpen, onClose, onAdd }: AddNetworkDevi
             ports: ports ? parseInt(ports) : undefined,
             vlans: vlans.filter(v => v.id),
             location: location || undefined,
+            os: os || undefined,
+            serialNumber: serialNumber || undefined,
             status: 'online',
         });
         resetForm();
@@ -168,6 +172,7 @@ export function AddNetworkDeviceModal({ isOpen, onClose, onAdd }: AddNetworkDevi
 
     const resetForm = () => {
         setName(''); setDeviceType('router'); setIp(''); setPorts(''); setVlans([]); setLocation('');
+        setOs(''); setSerialNumber('');
     };
 
     if (!isOpen) return null;
@@ -202,6 +207,17 @@ export function AddNetworkDeviceModal({ isOpen, onClose, onAdd }: AddNetworkDevi
                             <div className="form-group">
                                 <label>Ports:</label>
                                 <input type="text" value={ports} onChange={(e) => setPorts(e.target.value)} placeholder="24" />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Operating System:</label>
+                                <input type="text" value={os} onChange={(e) => setOs(e.target.value)} placeholder="RouterOS, IOS, etc." />
+                            </div>
+                            <div className="form-group">
+                                <label>Serial Number:</label>
+                                <input type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="SN123456" />
                             </div>
                         </div>
 
@@ -243,12 +259,16 @@ interface AddServerModalProps {
 }
 
 export function AddServerModal({ isOpen, onClose, onAdd }: AddServerModalProps) {
-    const [name, setName] = useState('');
     const [ip, setIp] = useState('');
     const [subnetMask, setSubnetMask] = useState('');
     const [dns, setDns] = useState('');
     const [applications, setApplications] = useState<ApplicationInfo[]>([]);
     const [location, setLocation] = useState('');
+    const [os, setOs] = useState('');
+    const [serialNumber, setSerialNumber] = useState('');
+    const [cpu, setCpu] = useState('');
+    const [ram, setRam] = useState('');
+    const [storage, setStorage] = useState('');
 
     const addApp = () => {
         setApplications([...applications, { name: '', type: 'web', port: '', protocol: 'TCP', status: 'running' }]);
@@ -274,6 +294,11 @@ export function AddServerModal({ isOpen, onClose, onAdd }: AddServerModalProps) 
             dns: dns || undefined,
             applications: applications.filter(a => a.name),
             location: location || undefined,
+            os: os || undefined,
+            serialNumber: serialNumber || undefined,
+            cpu: cpu || undefined,
+            ram: ram || undefined,
+            storage: storage || undefined,
             status: 'online',
         });
         resetForm();
@@ -282,6 +307,7 @@ export function AddServerModal({ isOpen, onClose, onAdd }: AddServerModalProps) 
 
     const resetForm = () => {
         setName(''); setIp(''); setSubnetMask(''); setDns(''); setApplications([]); setLocation('');
+        setOs(''); setSerialNumber(''); setCpu(''); setRam(''); setStorage('');
     };
 
     if (!isOpen) return null;
@@ -318,6 +344,32 @@ export function AddServerModal({ isOpen, onClose, onAdd }: AddServerModalProps) 
                         <div className="form-group full-width">
                             <label>DNS Servers:</label>
                             <input type="text" value={dns} onChange={(e) => setDns(e.target.value)} placeholder="8.8.8.8, 8.8.4.4" />
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Operating System:</label>
+                                <input type="text" value={os} onChange={(e) => setOs(e.target.value)} placeholder="Ubuntu, Windows, Debian" />
+                            </div>
+                            <div className="form-group">
+                                <label>Serial Number:</label>
+                                <input type="text" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} placeholder="SN7890" />
+                            </div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>CPU:</label>
+                                <input type="text" value={cpu} onChange={(e) => setCpu(e.target.value)} placeholder="8 Cores / AMD EPYC" />
+                            </div>
+                            <div className="form-group">
+                                <label>RAM:</label>
+                                <input type="text" value={ram} onChange={(e) => setRam(e.target.value)} placeholder="16 GB DDR4" />
+                            </div>
+                            <div className="form-group">
+                                <label>Storage:</label>
+                                <input type="text" value={storage} onChange={(e) => setStorage(e.target.value)} placeholder="500 GB NVMe" />
+                            </div>
                         </div>
 
                         <div className="section-divider">
@@ -594,6 +646,88 @@ export function EditApplicationModal({ isOpen, onClose, app, onSave, onDelete }:
                         <div style={{ flex: 1 }}></div>
                         <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
                         <button type="submit" className="btn-submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+interface EditCustomDetailModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    detail: { id: string; key: string; value: string } | null;
+    onSave: (detail: { id: string; key: string; value: string }) => void;
+    onDelete?: () => void;
+    isNew?: boolean;
+}
+
+export function EditCustomDetailModal({ isOpen, onClose, detail, onSave, onDelete, isNew }: EditCustomDetailModalProps) {
+    const [key, setKey] = useState(detail?.key || '');
+    const [value, setValue] = useState(detail?.value || '');
+
+    // Reset local state when detail opens
+    useState(() => {
+        if (detail) {
+            setKey(detail.key);
+            setValue(detail.value);
+        } else {
+            setKey('');
+            setValue('');
+        }
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave({
+            id: detail?.id || `detail_${Date.now()}`,
+            key,
+            value,
+        });
+        onClose();
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>{isNew ? 'Add Custom Detail' : 'Edit Custom Detail'}</h2>
+                    <button className="modal-close" onClick={onClose}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-group full-width">
+                            <label>Property Name:</label>
+                            <input
+                                type="text"
+                                value={key}
+                                onChange={(e) => setKey(e.target.value)}
+                                placeholder="e.g. Serial Number, Asset Tag"
+                                required
+                            />
+                        </div>
+                        <div className="form-group full-width">
+                            <label>Value:</label>
+                            <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder="Enter value"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        {!isNew && onDelete && (
+                            <button type="button" className="btn-delete-modal" onClick={() => { if (window.confirm('Delete this detail?')) { onDelete(); onClose(); } }}>
+                                <Trash2 size={16} /> Delete
+                            </button>
+                        )}
+                        <div style={{ flex: 1 }}></div>
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">{isNew ? 'Add Detail' : 'Save Changes'}</button>
                     </div>
                 </form>
             </div>
