@@ -9,6 +9,8 @@ services:
     env_file:
       - .env
     environment:
+      - DATABASE_URL=postgres://homelab_user:homelab_password@postgres:5432/homelab_db
+      - FRONTEND_URL=http://localhost:3301
       - PGHOST=postgres
       - PGPORT=5432
     depends_on:
