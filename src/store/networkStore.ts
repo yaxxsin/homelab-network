@@ -260,7 +260,7 @@ export const useNetworkStore = create<NetworkState>()(
                     selectedNode: null,
                     selectedEdge: null
                 });
-                get()._syncToServer();
+                get()._sync();
             },
 
             redo: () => {
@@ -278,7 +278,7 @@ export const useNetworkStore = create<NetworkState>()(
                     selectedNode: null,
                     selectedEdge: null
                 });
-                get()._syncToServer();
+                get()._sync();
             },
 
             createProject: (name, description) => {
