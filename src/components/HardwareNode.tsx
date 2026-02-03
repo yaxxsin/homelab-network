@@ -9,9 +9,6 @@ import {
     Laptop,
     Cloud,
     Globe,
-    AppWindow,
-    Mail,
-    Globe2,
     Camera,
     Wifi,
     Cpu,
@@ -19,6 +16,8 @@ import {
     Layers,
     Database,
     Shield,
+    Check,
+    AlertTriangle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { HardwareNodeData, HardwareType } from '../store/networkStore';
@@ -60,18 +59,22 @@ const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
     firewall: { bg: 'linear-gradient(135deg, #ed213a 0%, #93291e 100%)', accent: '#ed213a' },
 };
 
-const statusColors: Record<string, string> = {
-    online: '#22c55e',
-    offline: '#ef4444',
-    warning: '#f59e0b',
-};
-
-const appIconMap: Record<string, LucideIcon> = {
-    web: Globe2,
-    database: Database,
-    api: AppWindow,
-    mail: Mail,
-    dns: Globe,
+const typeLabels: Record<HardwareType, string> = {
+    router: 'Router',
+    switch: 'Switch',
+    server: 'Server',
+    pc: 'PC',
+    laptop: 'Laptop',
+    cloud: 'Cloud',
+    isp: 'ISP',
+    cctv: 'CCTV',
+    accesspoint: 'Access Point',
+    ont: 'ONT',
+    mikrotik: 'Mikrotik',
+    proxmox: 'Proxmox',
+    docker: 'Docker',
+    nas: 'NAS',
+    firewall: 'Firewall',
 };
 
 type HardwareNodeType = Node<HardwareNodeData, 'hardware'>;
@@ -89,54 +92,46 @@ function HardwareNode({ id, data, selected }: NodeProps<HardwareNodeType>) {
         if (node) setSelectedNode(node);
     };
 
-    const hasVlans = nodeData.vlans && nodeData.vlans.length > 0;
-    const hasApps = nodeData.applications && nodeData.applications.length > 0;
+    const isOnline = nodeData.status === 'online';
+    const isOffline = nodeData.status === 'offline';
+    const isWarning = nodeData.status === 'warning';
 
     return (
-        <div className={`hardware-node-modern ${selected ? 'selected' : ''}`} onClick={handleClick}>
+        <div
+            className={`uptime-kuma-node ${selected ? 'selected' : ''} ${nodeData.status}`}
+            onClick={handleClick}
+        >
             <Handle type="target" position={Position.Top} className="handle-modern" />
             <Handle type="target" position={Position.Left} className="handle-modern" id="left" />
 
-            <div className="node-icon-wrapper" style={{ background: colors.bg }}>
-                <Icon size={28} strokeWidth={1.8} color="#fff" />
+            {/* Status Icon in top right */}
+            <div className="status-badge-top">
+                {isOnline && <div className="dot online"><Check size={8} strokeWidth={4} /></div>}
+                {(isOffline || isWarning) && <div className="dot offline"><AlertTriangle size={8} strokeWidth={4} /></div>}
             </div>
 
-            <div className="node-info">
-                <div className="node-label-modern">{nodeData.label}</div>
-                {nodeData.ip && <div className="node-meta">{nodeData.ip}</div>}
+            <div className="node-card-content">
+                <div className="node-icon-uptime" style={{ color: colors.accent }}>
+                    <Icon size={32} strokeWidth={1.5} />
+                </div>
 
-                {hasVlans && (
-                    <div className="node-tags">
-                        {nodeData.vlans!.slice(0, 2).map((v) => (
-                            <span key={v.id} className="node-tag vlan">VLAN {v.id}</span>
-                        ))}
-                        {nodeData.vlans!.length > 2 && <span className="node-tag more">+{nodeData.vlans!.length - 2}</span>}
-                    </div>
-                )}
+                <div className="node-main-info">
+                    <h4 className="node-title">{nodeData.label}</h4>
+                    <span className="node-subtitle">{typeLabels[nodeData.hardwareType] || 'Device'}</span>
+                    {nodeData.ip && <span className="node-ip">{nodeData.ip}</span>}
+                </div>
 
-                {hasApps && (
-                    <div className="node-apps">
-                        {nodeData.applications!.slice(0, 3).map((app, i) => {
-                            const AppIcon = appIconMap[app.type] || AppWindow;
-                            return (
-                                <div key={i} className={`app-badge ${app.status}`} title={`${app.name} (${app.status})`}>
-                                    <AppIcon size={12} />
-                                </div>
-                            );
-                        })}
-                        {nodeData.applications!.length > 3 && <span className="app-more">+{nodeData.applications!.length - 3}</span>}
+                <div className={`status-pill ${nodeData.status}`}>
+                    {nodeData.status?.toUpperCase() || 'UNKNOWN'}
+                </div>
+
+                {nodeData.uptimeKumaId && (
+                    <div className="uptime-info">
+                        <span className="uptime-label">UPTIMEKUMA</span>
+                        {nodeData.latency && <span className="uptime-latency">{nodeData.latency}</span>}
                     </div>
                 )}
             </div>
-
-            <div
-                className="status-indicator"
-                style={{
-                    backgroundColor: statusColors[nodeData.status] || '#22c55e',
-                    boxShadow: `0 0 8px ${statusColors[nodeData.status] || '#22c55e'}`
-                }}
-                title={nodeData.status}
-            />
 
             <Handle type="source" position={Position.Bottom} className="handle-modern" />
             <Handle type="source" position={Position.Right} className="handle-modern" id="right" />

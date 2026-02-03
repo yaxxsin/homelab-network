@@ -504,93 +504,153 @@ body {
   }
 }
 
-/* Hardware Node Styles - Modern Design */
-.hardware-node-modern {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+/* Uptime Kuma Style Node */
+.uptime-kuma-node {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
-  min-width: 160px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.hardware-node-modern:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-
-.hardware-node-modern.selected {
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 2px #6366f1;
-}
-
-.node-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
   border-radius: 12px;
-  flex-shrink: 0;
-}
-
-.node-info {
+  padding: 16px;
+  width: 170px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.node-label-modern {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.node-meta {
-  font-size: 9px;
-  color: #64748b;
-  font-family: 'SF Mono', Monaco, monospace;
-  background: #f1f5f9;
-  padding: 1px 6px;
-  border-radius: 10px;
-  display: inline-flex;
   align-items: center;
-  margin-top: 2px;
-  border: 1px solid var(--border);
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.status-indicator {
+.uptime-kuma-node.selected {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.uptime-kuma-node.online {
+  border-color: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+
+.uptime-kuma-node.offline {
+  border-color: #e2e8f0;
+  opacity: 0.8;
+}
+
+.status-badge-top {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 10px;
-  height: 10px;
+  display: flex;
+  gap: 4px;
+}
+
+.status-badge-top .dot {
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.status-badge-top .dot.online {
+  background: #22c55e;
+}
+
+.status-badge-top .dot.offline {
+  background: #64748b;
+}
+
+.node-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.node-icon-uptime {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-main-info {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.node-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.node-subtitle {
+  font-size: 11px;
+  color: #64748b;
+  display: block;
+}
+
+.node-ip {
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+  margin-top: 2px;
+}
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.status-pill.online {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-pill.offline,
+.status-pill.unknown {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.status-pill.warning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.uptime-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.uptime-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #cbd5e1;
+  letter-spacing: 0.5px;
+}
+
+.uptime-latency {
+  font-size: 11px;
+  font-weight: 600;
+  color: #22c55e;
 }
 
 .handle-modern {
-  width: 12px !important;
-  height: 12px !important;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  width: 8px !important;
+  height: 8px !important;
+  background: #94a3b8 !important;
   border: 2px solid white !important;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
-  transition: transform 0.2s ease;
 }
 
-.handle-modern:hover {
-  transform: scale(1.2);
-}
+/* Original Styles follows... */
 
 /* Node Tags (VLANs) */
 .node-tags {

@@ -290,8 +290,9 @@ app.post('/api/webhooks/uptime-kuma', async (req, res) => {
         const monitorName = monitor.name;
         const status = heartbeat.status === 1 ? 'online' : 'offline';
         const monitorId = monitor.id.toString();
+        const latency = heartbeat.ping ? `${heartbeat.ping}ms` : null;
 
-        console.log(`Uptime Kuma Webhook: Monitor ${monitorName} (${monitorId}) is now ${status}`);
+        console.log(`Uptime Kuma Webhook: Monitor ${monitorName} (${monitorId}) is now ${status} (Ping: ${latency})`);
 
         // Update node status in all projects where uptimeKumaId matches
         // Note: In a production app, we might want to be more specific about which user/project
@@ -308,10 +309,10 @@ app.post('/api/webhooks/uptime-kuma', async (req, res) => {
                     let projectChanged = false;
                     const updatedNodes = p.nodes.map(node => {
                         if (node.data.uptimeKumaId === monitorId) {
-                            if (node.data.status !== status) {
+                            if (node.data.status !== status || node.data.latency !== latency) {
                                 projectChanged = true;
                                 changed = true;
-                                return { ...node, data: { ...node.data, status } };
+                                return { ...node, data: { ...node.data, status, latency } };
                             }
                         }
                         return node;
