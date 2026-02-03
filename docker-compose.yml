@@ -6,18 +6,10 @@ services:
       - "3301:3301"
     volumes:
       - ./data:/app/data
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgres://homelab_user:homelab_password@postgres:5432/homelab_db
-      - SESSION_SECRET=change-me-to-a-secure-random-string
-      - GOOGLE_CLIENT_ID=your-google-client-id
-      - GOOGLE_CLIENT_SECRET=your-google-client-secret
-      - TURNSTILE_SITE_KEY=0x4AAAAAACW1xz9ORPH5_Guw
-      - TURNSTILE_SECRET_KEY=0x4AAAAAACW1x1yXFpJToeZVHh-yTmhJcHM
-      - FRONTEND_URL=http://localhost:3301
-      - PGUSER=homelab_user
       - PGHOST=postgres
-      - PGPASSWORD=homelab_password
-      - PGDATABASE=homelab_db
       - PGPORT=5432
     depends_on:
       - postgres
