@@ -41,6 +41,7 @@ export interface HardwareNodeData extends Record<string, unknown> {
     ispType?: string;
     accountId?: string;
     publicIp?: string;
+    uptimeKumaId?: string;
 }
 
 export type HardwareNode = Node<HardwareNodeData, 'hardware'>;
@@ -127,10 +128,25 @@ export const useNetworkStore = create<NetworkState>()(
                     const response = await fetch('/api/projects');
                     if (response.ok) {
                         const data = await response.json();
-                        // If user has data on server, use it. Otherwise, start fresh or keep what's here?
-                        // Actually, if they just logged in, we should probably favor server data.
                         if (data && data.projects) {
-                            set({ projects: data.projects });
+                            const { currentProjectId } = get();
+                            const updatedProjects = data.projects;
+
+                            // If we have an active project, update it from the server data
+                            if (currentProjectId) {
+                                const serverProject = updatedProjects.find((p: Project) => p.id === currentProjectId);
+                                if (serverProject) {
+                                    set({
+                                        projects: updatedProjects,
+                                        nodes: serverProject.nodes,
+                                        edges: serverProject.edges
+                                    });
+                                } else {
+                                    set({ projects: updatedProjects });
+                                }
+                            } else {
+                                set({ projects: updatedProjects });
+                            }
                         }
                     }
                 } catch (err) {

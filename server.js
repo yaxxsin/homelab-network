@@ -278,6 +278,64 @@ app.post('/api/projects', isAuthenticated, async (req, res) => {
     }
 });
 
+// Uptime Kuma Webhook
+app.post('/api/webhooks/uptime-kuma', async (req, res) => {
+    try {
+        const { msg, heartbeat, monitor } = req.body;
+        // Uptime Kuma sends heartbeat.status: 1 for UP, 0 for DOWN
+        if (!monitor || !heartbeat) {
+            return res.status(400).json({ error: 'Invalid webhook payload' });
+        }
+
+        const monitorName = monitor.name;
+        const status = heartbeat.status === 1 ? 'online' : 'offline';
+        const monitorId = monitor.id.toString();
+
+        console.log(`Uptime Kuma Webhook: Monitor ${monitorName} (${monitorId}) is now ${status}`);
+
+        // Update node status in all projects where uptimeKumaId matches
+        // Note: In a production app, we might want to be more specific about which user/project
+        // But for this homelab tool, updating all occurrences is often what's desired
+
+        const result = await pool.query('SELECT id, user_id, data FROM projects');
+
+        for (const row of result.rows) {
+            let projectData = row.data;
+            let changed = false;
+
+            if (projectData.projects) {
+                projectData.projects = projectData.projects.map(p => {
+                    let projectChanged = false;
+                    const updatedNodes = p.nodes.map(node => {
+                        if (node.data.uptimeKumaId === monitorId) {
+                            if (node.data.status !== status) {
+                                projectChanged = true;
+                                changed = true;
+                                return { ...node, data: { ...node.data, status } };
+                            }
+                        }
+                        return node;
+                    });
+
+                    if (projectChanged) {
+                        return { ...p, nodes: updatedNodes, updatedAt: Date.now() };
+                    }
+                    return p;
+                });
+            }
+
+            if (changed) {
+                await pool.query('UPDATE projects SET data = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify(projectData), row.id]);
+            }
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Webhook Error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Fallback untuk semua route lain (SPA)
 app.use(async (req, res) => {
     const indexPath = path.join(__dirname, 'dist', 'index.html');

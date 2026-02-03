@@ -183,6 +183,13 @@ export default function App() {
   useEffect(() => {
     if (user) {
       initStore();
+
+      // Poll for updates every 30 seconds
+      const interval = setInterval(() => {
+        initStore();
+      }, 30000);
+
+      return () => clearInterval(interval);
     } else if (!isLoading) {
       resetStore();
     }

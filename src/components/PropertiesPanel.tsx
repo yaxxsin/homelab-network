@@ -232,6 +232,12 @@ export default function PropertiesPanel() {
                 </div>
 
                 <div className="form-group">
+                    <label>Uptime Kuma Monitor ID</label>
+                    <input type="text" value={selectedNode.data.uptimeKumaId || ''} onChange={(e) => updateNode(selectedNode.id, { uptimeKumaId: e.target.value })} placeholder="e.g. 1" />
+                    <p className="text-xs text-slate-400 mt-1">Leave empty to use manual status</p>
+                </div>
+
+                <div className="form-group">
                     <label>Type</label>
                     <div className="type-badge">{typeLabels[selectedNode.data.hardwareType] || 'DEVICE'}</div>
                 </div>
