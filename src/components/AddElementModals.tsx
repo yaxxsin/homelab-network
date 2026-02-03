@@ -259,6 +259,7 @@ interface AddServerModalProps {
 }
 
 export function AddServerModal({ isOpen, onClose, onAdd }: AddServerModalProps) {
+    const [name, setName] = useState('');
     const [ip, setIp] = useState('');
     const [subnetMask, setSubnetMask] = useState('');
     const [dns, setDns] = useState('');
