@@ -169,16 +169,24 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             _syncToServer: async () => {
-                try {
-                    const { projects } = get();
-                    await fetch('/api/projects', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ projects }),
-                    });
-                } catch (err) {
-                    console.error('Failed to sync projects to server:', err);
-                }
+                // Debounce the sync to prevent deadlocks and excessive server load
+                const { _syncTimer } = get() as any;
+                if (_syncTimer) clearTimeout(_syncTimer);
+
+                const timer = setTimeout(async () => {
+                    try {
+                        const { projects } = get();
+                        await fetch('/api/projects', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ projects }),
+                        });
+                    } catch (err) {
+                        console.error('Failed to sync projects to server:', err);
+                    }
+                }, 1000); // 1s debounce
+
+                set({ _syncTimer: timer } as any);
             },
 
             createProject: (name, description) => {

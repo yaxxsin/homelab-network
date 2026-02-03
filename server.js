@@ -289,18 +289,26 @@ app.get('/api/projects', isAuthenticated, async (req, res) => {
 });
 
 app.post('/api/projects', isAuthenticated, async (req, res) => {
+    const client = await pool.connect();
     try {
         const { projects } = req.body;
         const projectsToSave = projects || [];
-        await pool.query('BEGIN');
-        await pool.query('DELETE FROM projects WHERE user_id = $1', [req.user.id]);
-        await pool.query('INSERT INTO projects (user_id, data) VALUES ($1, $2)', [req.user.id, JSON.stringify({ projects: projectsToSave })]);
-        await pool.query('COMMIT');
-        res.json({ success: true });
+        await client.query('BEGIN');
+        // Use UPSERT (INSERT ... ON CONFLICT) to reduce deadlock chance on concurrent saves
+        await client.query(`
+            INSERT INTO projects (user_id, data) 
+            VALUES ($1, $2)
+            ON CONFLICT (user_id) 
+            DO UPDATE SET data = EXCLUDED.data, updated_at = CURRENT_TIMESTAMP
+        `, [req.user.id, JSON.stringify({ projects: projectsToSave })]);
+        await client.query('COMMIT');
+        if (!res.headersSent) res.json({ success: true });
     } catch (err) {
-        await pool.query('ROLLBACK');
+        await client.query('ROLLBACK');
         console.error('Error saving projects to DB:', err);
-        res.status(500).json({ error: 'Failed to save data to database' });
+        if (!res.headersSent) res.status(500).json({ error: 'Failed to save data to database' });
+    } finally {
+        client.release();
     }
 });
 
@@ -397,17 +405,27 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
 
                         // Some Uptime Kuma versions send monitorList immediately or via event
                         const handleMonitorList = (list) => {
-                            console.log('Uptime Kuma Monitor List Received, first monitor:', Object.values(list)[0]);
+                            console.log('Uptime Kuma Monitor List Received, count:', Object.values(list).length);
                             clearTimeout(timeout);
                             socket.off('monitorList', handleMonitorList);
                             socket.disconnect();
-                            resolve(Object.values(list).map(m => ({
-                                id: m.id,
-                                name: m.name,
-                                status: m.active === 0 ? 'offline' : (m.status === 1 ? 'online' : (m.status === 0 ? 'offline' : 'warning')),
-                                latency: m.ping ? `${m.ping}ms` : null,
-                                msg: m.msg
-                            })));
+                            resolve(Object.values(list).map(m => {
+                                // Real-world data shows 'active: true' when 'status' might be undefined
+                                let status = 'warning';
+                                if (m.active === true || m.active === 1) {
+                                    status = m.status === 0 ? 'offline' : 'online';
+                                } else if (m.active === false || m.active === 0) {
+                                    status = 'offline';
+                                }
+
+                                return {
+                                    id: m.id,
+                                    name: m.name,
+                                    status: status,
+                                    latency: m.ping ? `${m.ping}ms` : null,
+                                    msg: m.msg
+                                };
+                            }));
                         };
 
                         socket.on('monitorList', handleMonitorList);
