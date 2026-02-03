@@ -407,7 +407,13 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
                 if (authRes.ok) {
                     socket.emit('getMonitorList', (list) => {
                         socket.disconnect();
-                        resolve(Object.values(list).map(m => ({ id: m.id, name: m.name })));
+                        resolve(Object.values(list).map(m => ({
+                            id: m.id,
+                            name: m.name,
+                            status: m.status === 1 ? 'online' : (m.status === 0 ? 'offline' : 'warning'),
+                            latency: m.ping ? `${m.ping}ms` : null,
+                            msg: m.msg // Added msg field
+                        })));
                     });
                 } else {
                     socket.disconnect();

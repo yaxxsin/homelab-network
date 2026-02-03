@@ -39,7 +39,7 @@ export default function PropertiesPanel() {
     const [editingApp, setEditingApp] = useState<{ index: number; app: ApplicationInfo } | null>(null);
     const [showAddVlan, setShowAddVlan] = useState(false);
     const [newVlan, setNewVlan] = useState<VlanInfo>({ id: '', name: '', ipRange: '', gateway: '' });
-    const [monitors, setMonitors] = useState<{ id: number; name: string }[]>([]);
+    const [monitors, setMonitors] = useState<{ id: number; name: string; status: string; latency: string | null }[]>([]);
     const [isLoadingMonitors, setIsLoadingMonitors] = useState(false);
 
     useEffect(() => {
@@ -252,7 +252,19 @@ export default function PropertiesPanel() {
                     <label>Uptime Kuma Monitor</label>
                     <select
                         value={selectedNode.data.uptimeKumaId || ''}
-                        onChange={(e) => updateNode(selectedNode.id, { uptimeKumaId: e.target.value })}
+                        onChange={(e) => {
+                            const monitorId = e.target.value;
+                            const monitor = monitors.find(m => m.id.toString() === monitorId);
+                            if (monitor) {
+                                updateNode(selectedNode.id, {
+                                    uptimeKumaId: monitorId,
+                                    status: monitor.status as any,
+                                    latency: monitor.latency || undefined
+                                });
+                            } else {
+                                updateNode(selectedNode.id, { uptimeKumaId: '' });
+                            }
+                        }}
                         disabled={isLoadingMonitors}
                     >
                         <option value="">- No Monitoring -</option>

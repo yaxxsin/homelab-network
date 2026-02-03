@@ -198,6 +198,7 @@ export const useNetworkStore = create<NetworkState>()(
                     selectedNode: null,
                     selectedEdge: null,
                 }));
+                get()._sync();
             },
 
             selectProject: (id) => {
@@ -231,6 +232,7 @@ export const useNetworkStore = create<NetworkState>()(
                             : p
                     );
                     set({ projects: updatedProjects, currentProjectId: null });
+                    get()._syncToServer();
                 } else {
                     set({ currentProjectId: null });
                 }
