@@ -278,7 +278,7 @@ export default function PropertiesPanel() {
                     >
                         <option value="">- No Monitoring -</option>
                         {monitors.map(m => (
-                            <option key={m.id} value={m.id.toString()}>{m.name}</option>
+                            <option key={m.id} value={m?.id?.toString() || ''}>{m.name}</option>
                         ))}
                     </select>
                     <p className={`text-xs mt-1 ${monitorError ? 'text-red-400' : 'text-slate-400'}`}>
