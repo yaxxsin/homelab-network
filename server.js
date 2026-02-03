@@ -11,6 +11,7 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
 import connectPg from 'connect-pg-simple';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 
 const { Pool } = pkg;
 const PostgresStore = connectPg(session);
@@ -334,6 +335,97 @@ app.post('/api/webhooks/uptime-kuma', async (req, res) => {
     } catch (err) {
         console.error('Webhook Error:', err);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Fetch Uptime Kuma Monitors
+app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
+    const url = process.env.UPTIME_KUMA_URL;
+    const username = process.env.UPTIME_KUMA_USERNAME;
+    const password = process.env.UPTIME_KUMA_PASSWORD;
+
+    if (!url || !username || !password) {
+        return res.status(400).json({ error: 'Uptime Kuma credentials not configured' });
+    }
+
+    const socket = io(url, {
+        reconnection: false,
+        timeout: 10000,
+    });
+
+    let authenticated = false;
+
+    socket.on('connect', () => {
+        socket.emit('login', {
+            username,
+            password,
+        }, (res) => {
+            if (res.ok) {
+                authenticated = true;
+                socket.emit('getMonitorList', (monitorList) => {
+                    const simplifiedList = Object.values(monitorList).map(m => ({
+                        id: m.id,
+                        name: m.name,
+                        type: m.type,
+                    }));
+                    socket.disconnect();
+                    res.json ? res.json(simplifiedList) : null; // Safety check
+                });
+            } else {
+                socket.disconnect();
+            }
+        });
+    });
+
+    // Handle timeout or connection failure within the request scope
+    const timeout = setTimeout(() => {
+        if (!authenticated) {
+            socket.disconnect();
+            if (!res.headersSent) res.status(504).json({ error: 'Timeout connecting to Uptime Kuma' });
+        }
+    }, 10000);
+
+    socket.on('connect_error', (err) => {
+        socket.disconnect();
+        clearTimeout(timeout);
+        if (!res.headersSent) res.status(500).json({ error: `Connection error: ${err.message}` });
+    });
+
+    // Modified getMonitorList emission to handle the response properly
+    socket.on('login', (loginRes) => {
+        if (!loginRes.ok) {
+            socket.disconnect();
+            clearTimeout(timeout);
+            if (!res.headersSent) res.status(401).json({ error: 'Invalid Uptime Kuma credentials' });
+        }
+    });
+
+    // Wrap the socket logic in a promise to handle the response cleanly
+    const monitors = await new Promise((resolve, reject) => {
+        socket.on('connect', () => {
+            socket.emit('login', { username, password }, (authRes) => {
+                if (authRes.ok) {
+                    socket.emit('getMonitorList', (list) => {
+                        socket.disconnect();
+                        resolve(Object.values(list).map(m => ({ id: m.id, name: m.name })));
+                    });
+                } else {
+                    socket.disconnect();
+                    reject(new Error('Auth failed'));
+                }
+            });
+        });
+        socket.on('connect_error', (err) => reject(err));
+        setTimeout(() => reject(new Error('Timeout')), 10000);
+    }).catch(err => {
+        console.error('Uptime Kuma API Error:', err.message);
+        return null;
+    });
+
+    if (monitors) {
+        if (!res.headersSent) res.json(monitors);
+    } else {
+        if (!res.headersSent) res.status(500).json({ error: 'Failed to fetch monitors from Uptime Kuma' });
     }
 });
 

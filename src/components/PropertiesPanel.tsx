@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Trash2, Wifi, WifiOff, AlertTriangle, Link2, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Trash2, Link2, Plus } from 'lucide-react';
 import { useNetworkStore } from '../store/networkStore';
 import type { HardwareType, CustomEdge, ApplicationInfo, VlanInfo } from '../store/networkStore';
 import { EditApplicationModal } from './AddElementModals';
@@ -39,6 +39,23 @@ export default function PropertiesPanel() {
     const [editingApp, setEditingApp] = useState<{ index: number; app: ApplicationInfo } | null>(null);
     const [showAddVlan, setShowAddVlan] = useState(false);
     const [newVlan, setNewVlan] = useState<VlanInfo>({ id: '', name: '', ipRange: '', gateway: '' });
+    const [monitors, setMonitors] = useState<{ id: number; name: string }[]>([]);
+    const [isLoadingMonitors, setIsLoadingMonitors] = useState(false);
+
+    useEffect(() => {
+        if (selectedNode) {
+            setIsLoadingMonitors(true);
+            fetch('/api/uptime-kuma/monitors')
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setMonitors(data);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch monitors:', err))
+                .finally(() => setIsLoadingMonitors(false));
+        }
+    }, [selectedNode?.id]);
 
     // Edge editing panel
     if (selectedEdge) {
@@ -232,9 +249,20 @@ export default function PropertiesPanel() {
                 </div>
 
                 <div className="form-group">
-                    <label>Uptime Kuma Monitor ID</label>
-                    <input type="text" value={selectedNode.data.uptimeKumaId || ''} onChange={(e) => updateNode(selectedNode.id, { uptimeKumaId: e.target.value })} placeholder="e.g. 1" />
-                    <p className="text-xs text-slate-400 mt-1">Leave empty to use manual status</p>
+                    <label>Uptime Kuma Monitor</label>
+                    <select
+                        value={selectedNode.data.uptimeKumaId || ''}
+                        onChange={(e) => updateNode(selectedNode.id, { uptimeKumaId: e.target.value })}
+                        disabled={isLoadingMonitors}
+                    >
+                        <option value="">- No Monitoring -</option>
+                        {monitors.map(m => (
+                            <option key={m.id} value={m.id.toString()}>{m.name}</option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-slate-400 mt-1">
+                        {isLoadingMonitors ? 'Loading monitors...' : 'Select a monitor from Uptime Kuma'}
+                    </p>
                 </div>
 
                 <div className="form-group">
@@ -318,20 +346,7 @@ export default function PropertiesPanel() {
                     </div>
                 )}
 
-                <div className="form-group">
-                    <label>Status</label>
-                    <div className="status-buttons">
-                        <button className={`status-btn online ${selectedNode.data.status === 'online' ? 'active' : ''}`} onClick={() => updateNode(selectedNode.id, { status: 'online' })}>
-                            <Wifi size={14} /> Online
-                        </button>
-                        <button className={`status-btn offline ${selectedNode.data.status === 'offline' ? 'active' : ''}`} onClick={() => updateNode(selectedNode.id, { status: 'offline' })}>
-                            <WifiOff size={14} /> Offline
-                        </button>
-                        <button className={`status-btn warning ${selectedNode.data.status === 'warning' ? 'active' : ''}`} onClick={() => updateNode(selectedNode.id, { status: 'warning' })}>
-                            <AlertTriangle size={14} /> Warning
-                        </button>
-                    </div>
-                </div>
+
 
                 <div className="panel-actions">
                     <button className="delete-btn" onClick={() => deleteNode(selectedNode.id)}>
