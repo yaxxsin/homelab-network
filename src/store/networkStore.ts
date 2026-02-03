@@ -43,6 +43,7 @@ export interface HardwareNodeData extends Record<string, unknown> {
     publicIp?: string;
     uptimeKumaId?: string;
     latency?: string | number;
+    customDetails?: { id: string, key: string, value: string }[];
 }
 
 export type HardwareNode = Node<HardwareNodeData, 'hardware'>;
@@ -80,6 +81,8 @@ interface NetworkState {
     selectedNode: HardwareNode | null;
     selectedEdge: CustomEdge | null;
     connectionMode: boolean;
+    past: { nodes: HardwareNode[], edges: CustomEdge[] }[];
+    future: { nodes: HardwareNode[], edges: CustomEdge[] }[];
 
     // Project Actions
     createProject: (name: string, description?: string) => void;
@@ -110,6 +113,14 @@ interface NetworkState {
     resetStore: () => void;
     isInitialized: boolean;
     isLoading: boolean;
+    // Undo/Redo actions
+    undo: () => void;
+    redo: () => void;
+    takeSnapshot: () => void;
+    // Detail CRUD
+    addNodeDetail: (nodeId: string, key: string, value: string) => void;
+    updateNodeDetail: (nodeId: string, detailId: string, key: string, value: string) => void;
+    deleteNodeDetail: (nodeId: string, detailId: string) => void;
 }
 
 let nodeIdCounter = Date.now();
@@ -127,6 +138,8 @@ export const useNetworkStore = create<NetworkState>()(
             connectionMode: false,
             isInitialized: false,
             isLoading: false,
+            past: [] as { nodes: HardwareNode[], edges: CustomEdge[] }[],
+            future: [] as { nodes: HardwareNode[], edges: CustomEdge[] }[],
 
             initStore: async () => {
                 if (get().isLoading) return;
@@ -218,7 +231,52 @@ export const useNetworkStore = create<NetworkState>()(
                 set({ _syncTimer: timer } as any);
             },
 
+            // Undo/Redo Logic
+            takeSnapshot: () => {
+                const { nodes, edges, past } = get();
+                // Limit history to 50 steps
+                const newPast = [...past, { nodes: [...nodes], edges: [...edges] }].slice(-50);
+                set({ past: newPast, future: [] });
+            },
+
+            undo: () => {
+                const { past, future, nodes, edges } = get();
+                if (past.length === 0) return;
+
+                const previous = past[past.length - 1];
+                const newPast = past.slice(0, past.length - 1);
+
+                set({
+                    nodes: previous.nodes,
+                    edges: previous.edges,
+                    past: newPast,
+                    future: [{ nodes, edges }, ...future].slice(0, 50),
+                    selectedNode: null,
+                    selectedEdge: null
+                });
+                get()._syncToServer();
+            },
+
+            redo: () => {
+                const { past, future, nodes, edges } = get();
+                if (future.length === 0) return;
+
+                const next = future[0];
+                const newFuture = future.slice(1);
+
+                set({
+                    nodes: next.nodes,
+                    edges: next.edges,
+                    past: [...past, { nodes, edges }].slice(-50),
+                    future: newFuture,
+                    selectedNode: null,
+                    selectedEdge: null
+                });
+                get()._syncToServer();
+            },
+
             createProject: (name, description) => {
+                get().takeSnapshot();
                 const newProject: Project = {
                     id: `proj_${Date.now()}`,
                     name: name || 'Untitled Project',
@@ -247,6 +305,8 @@ export const useNetworkStore = create<NetworkState>()(
                         edges: project.edges,
                         selectedNode: null,
                         selectedEdge: null,
+                        past: [],
+                        future: []
                     });
                 }
             },
@@ -290,18 +350,27 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             onNodesChange: (changes) => {
+                // Only snapshot on drag end or significant changes to avoid spamming past
+                const isDragEnd = changes.some(c => c.type === 'position' && (c as any).dragging === false);
+                const isSelection = changes.every(c => c.type === 'select');
+                if (isDragEnd && !isSelection) get().takeSnapshot();
+
                 const updatedNodes = applyNodeChanges(changes, get().nodes);
                 set({ nodes: updatedNodes });
                 get()._sync();
             },
 
             onEdgesChange: (changes) => {
+                const isSelection = changes.every(c => c.type === 'select');
+                if (!isSelection) get().takeSnapshot();
+
                 const updatedEdges = applyEdgeChanges(changes, get().edges) as CustomEdge[];
                 set({ edges: updatedEdges });
                 get()._sync();
             },
 
             onConnect: (connection) => {
+                get().takeSnapshot();
                 const newEdge: CustomEdge = {
                     ...connection,
                     id: `edge_${Date.now()}`,
@@ -316,6 +385,7 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             addNode: (node) => {
+                get().takeSnapshot();
                 set({
                     nodes: [...get().nodes, node],
                 });
@@ -323,6 +393,7 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             addNodeFromData: (data) => {
+                get().takeSnapshot();
                 const newNode: HardwareNode = {
                     id: getNodeId(),
                     type: 'hardware',
@@ -336,6 +407,7 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             addEdgeFromData: (data) => {
+                get().takeSnapshot();
                 const animationType = data.animationType || 'dashed';
                 const lineType = data.lineType || 'bezier';
                 const newEdge: CustomEdge = {
@@ -359,6 +431,8 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             updateNode: (id, data) => {
+                // If it's a major update (not just selection), snapshot
+                get().takeSnapshot();
                 const updatedNodes = get().nodes.map((node) =>
                     node.id === id ? { ...node, data: { ...node.data, ...data } } : node
                 );
@@ -382,6 +456,7 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             deleteNode: (id) => {
+                get().takeSnapshot();
                 set({
                     nodes: get().nodes.filter((node) => node.id !== id),
                     edges: get().edges.filter((edge) => edge.source !== id && edge.target !== id),
@@ -391,6 +466,7 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             deleteEdge: (id) => {
+                get().takeSnapshot();
                 set({
                     edges: get().edges.filter((edge) => edge.id !== id),
                     selectedEdge: get().selectedEdge?.id === id ? null : get().selectedEdge,
@@ -399,6 +475,7 @@ export const useNetworkStore = create<NetworkState>()(
             },
 
             updateEdge: (id, data) => {
+                get().takeSnapshot();
                 const updatedEdges = get().edges.map((edge) => {
                     if (edge.id === id) {
                         const updatedEdge = { ...edge, ...data };
@@ -420,6 +497,57 @@ export const useNetworkStore = create<NetworkState>()(
                 set({
                     edges: updatedEdges,
                     selectedEdge: updatedSelectedEdge,
+                });
+                get()._sync();
+            },
+
+            addNodeDetail: (nodeId, key, value) => {
+                get().takeSnapshot();
+                const detail = { id: `detail_${Date.now()}`, key, value };
+                const updatedNodes = get().nodes.map(n => {
+                    if (n.id === nodeId) {
+                        const details = n.data.customDetails || [];
+                        return { ...n, data: { ...n.data, customDetails: [...details, detail] } };
+                    }
+                    return n;
+                });
+                set({
+                    nodes: updatedNodes,
+                    selectedNode: get().selectedNode?.id === nodeId ? updatedNodes.find(n => n.id === nodeId) : get().selectedNode
+                });
+                get()._sync();
+            },
+
+            updateNodeDetail: (nodeId, detailId, key, value) => {
+                get().takeSnapshot();
+                const updatedNodes = get().nodes.map(n => {
+                    if (n.id === nodeId) {
+                        const details = (n.data.customDetails || []).map(d =>
+                            d.id === detailId ? { ...d, key, value } : d
+                        );
+                        return { ...n, data: { ...n.data, customDetails: details } };
+                    }
+                    return n;
+                });
+                set({
+                    nodes: updatedNodes,
+                    selectedNode: get().selectedNode?.id === nodeId ? updatedNodes.find(n => n.id === nodeId) : get().selectedNode
+                });
+                get()._sync();
+            },
+
+            deleteNodeDetail: (nodeId, detailId) => {
+                get().takeSnapshot();
+                const updatedNodes = get().nodes.map(n => {
+                    if (n.id === nodeId) {
+                        const details = (n.data.customDetails || []).filter(d => d.id !== detailId);
+                        return { ...n, data: { ...n.data, customDetails: details } };
+                    }
+                    return n;
+                });
+                set({
+                    nodes: updatedNodes,
+                    selectedNode: get().selectedNode?.id === nodeId ? updatedNodes.find(n => n.id === nodeId) : get().selectedNode
                 });
                 get()._sync();
             },

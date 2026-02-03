@@ -365,9 +365,51 @@ export default function PropertiesPanel() {
                             </div>
                         )}
                     </div>
-                )}
+                )}                {/* Custom Details CRUD */}
+                <div className="form-group border-t border-slate-700/50 pt-4 mt-2">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-indigo-400 font-bold text-xs tracking-wider uppercase">Custom Details</label>
+                        <button
+                            className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-[10px] px-2 py-1 rounded transition-colors flex items-center gap-1"
+                            onClick={() => {
+                                const key = prompt('Detail Name (e.g. Serial No):');
+                                const value = prompt('Value:');
+                                if (key && value) {
+                                    useNetworkStore.getState().addNodeDetail(selectedNode.id, key, value);
+                                }
+                            }}
+                        >
+                            <Plus size={10} /> Add
+                        </button>
+                    </div>
 
-
+                    <div className="space-y-1">
+                        {(selectedNode.data.customDetails || []).map((detail) => (
+                            <div key={detail.id} className="group relative bg-slate-800/40 hover:bg-slate-800/60 p-2 rounded-md border border-slate-700/30 transition-all">
+                                <div className="flex flex-col pr-6 cursor-pointer" onClick={() => {
+                                    const newValue = prompt(`Edit ${detail.key}:`, detail.value);
+                                    if (newValue !== null) {
+                                        useNetworkStore.getState().updateNodeDetail(selectedNode.id, detail.id, detail.key, newValue);
+                                    }
+                                }}>
+                                    <span className="text-[10px] text-slate-500 uppercase font-medium">{detail.key}</span>
+                                    <span className="text-sm text-slate-200">{detail.value}</span>
+                                </div>
+                                <button
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => useNetworkStore.getState().deleteNodeDetail(selectedNode.id, detail.id)}
+                                >
+                                    <Trash2 size={12} />
+                                </button>
+                            </div>
+                        ))}
+                        {(!selectedNode.data.customDetails || selectedNode.data.customDetails.length === 0) && (
+                            <div className="text-center py-4 bg-slate-800/20 rounded-md border border-dashed border-slate-700/50">
+                                <p className="text-[10px] text-slate-500 italic uppercase">No details added</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <div className="panel-actions">
                     <button className="delete-btn" onClick={() => deleteNode(selectedNode.id)}>

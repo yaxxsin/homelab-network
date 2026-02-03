@@ -20,6 +20,7 @@ import { useNetworkStore } from './store/networkStore';
 import { useAuthStore } from './store/authStore';
 import Login from './components/Login';
 import type { HardwareNode as HardwareNodeType, HardwareType, CustomEdge } from './store/networkStore';
+import { RotateCcw, RotateCw } from 'lucide-react';
 import './App.css';
 
 const nodeTypes = {
@@ -120,10 +121,57 @@ function Flow() {
     return colors[node.data.hardwareType] || '#888';
   };
 
+  const undo = useNetworkStore((state) => state.undo);
+  const redo = useNetworkStore((state) => state.redo);
+  const past = useNetworkStore((state) => state.past);
+  const future = useNetworkStore((state) => state.future);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey)) {
+        if (e.key === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) redo();
+          else undo();
+        } else if (e.key === 'y') {
+          e.preventDefault();
+          redo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
+
   return (
     <div className={`app-container ${connectionMode ? 'connection-mode' : ''}`}>
       <Sidebar />
       <div className="react-flow-wrapper" ref={reactFlowWrapper}>
+        <div className="canvas-toolbar">
+          <button
+            className="toolbar-btn"
+            onClick={undo}
+            disabled={past.length === 0}
+            title="Undo (Ctrl+Z)"
+          >
+            <RotateCcw size={16} />
+          </button>
+          <button
+            className="toolbar-btn"
+            onClick={redo}
+            disabled={future.length === 0}
+            title="Redo (Ctrl+Y)"
+          >
+            <RotateCw size={16} />
+          </button>
+          <div className="toolbar-divider" />
+          <span className="toolbar-status">
+            {connectionMode ? 'Connection Mode Active' : 'Select or Drag to Edit'}
+          </span>
+        </div>
         <ReactFlow
           nodes={nodes}
           edges={edges}
