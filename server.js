@@ -161,11 +161,11 @@ async function ensureDatabaseSchema(retries = 10) {
             // Clean up any projects without a user (legacy data)
             await client.query('DELETE FROM projects WHERE user_id IS NULL');
             await client.query('ALTER TABLE projects ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;');
-            // Try to set NOT NULL if it was added without it
+            // Ensure user_id is unique for UPSERT logic
             try {
-                await client.query('ALTER TABLE projects ALTER COLUMN user_id SET NOT NULL;');
+                await client.query('ALTER TABLE projects ADD CONSTRAINT projects_user_id_unique UNIQUE (user_id);');
             } catch (e) {
-                console.log('Could not enforce NOT NULL on user_id yet, likely legacy data exists');
+                // Ignore if already exists
             }
 
             console.log('Database schema ensured and validated');

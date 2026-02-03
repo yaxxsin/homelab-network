@@ -108,6 +108,8 @@ interface NetworkState {
     _syncToServer: () => Promise<void>;
     initStore: () => Promise<void>;
     resetStore: () => void;
+    isInitialized: boolean;
+    isLoading: boolean;
 }
 
 let nodeIdCounter = Date.now();
@@ -123,8 +125,12 @@ export const useNetworkStore = create<NetworkState>()(
             selectedNode: null,
             selectedEdge: null,
             connectionMode: false,
+            isInitialized: false,
+            isLoading: false,
 
             initStore: async () => {
+                if (get().isLoading) return;
+                set({ isLoading: true });
                 try {
                     const response = await fetch('/api/projects');
                     if (response.ok) {
@@ -133,25 +139,43 @@ export const useNetworkStore = create<NetworkState>()(
                             const { currentProjectId } = get();
                             const updatedProjects = data.projects;
 
-                            // If we have an active project, update it from the server data
-                            if (currentProjectId) {
-                                const serverProject = updatedProjects.find((p: Project) => p.id === currentProjectId);
-                                if (serverProject) {
-                                    set({
-                                        projects: updatedProjects,
-                                        nodes: serverProject.nodes,
-                                        edges: serverProject.edges
-                                    });
+                            // If server has projects
+                            if (updatedProjects.length > 0) {
+                                let nextNodes = get().nodes;
+                                let nextEdges = get().edges;
+                                let nextProjectId = currentProjectId;
+
+                                if (currentProjectId) {
+                                    const serverProject = updatedProjects.find((p: Project) => p.id === currentProjectId);
+                                    if (serverProject) {
+                                        nextNodes = serverProject.nodes;
+                                        nextEdges = serverProject.edges;
+                                    }
                                 } else {
-                                    set({ projects: updatedProjects });
+                                    // If no project selected but server has some, pick the first one
+                                    nextProjectId = updatedProjects[0].id;
+                                    nextNodes = updatedProjects[0].nodes;
+                                    nextEdges = updatedProjects[0].edges;
                                 }
+
+                                set({
+                                    projects: updatedProjects,
+                                    nodes: nextNodes,
+                                    edges: nextEdges,
+                                    currentProjectId: nextProjectId,
+                                    isInitialized: true
+                                });
                             } else {
-                                set({ projects: updatedProjects });
+                                set({ isInitialized: true });
                             }
+                        } else {
+                            set({ isInitialized: true });
                         }
                     }
                 } catch (err) {
                     console.error('Failed to load projects from server:', err);
+                } finally {
+                    set({ isLoading: false });
                 }
             },
 
@@ -163,12 +187,20 @@ export const useNetworkStore = create<NetworkState>()(
                     edges: [],
                     selectedNode: null,
                     selectedEdge: null,
-                    connectionMode: false
+                    connectionMode: false,
+                    isInitialized: false,
+                    isLoading: false
                 });
-                // Clear localStorage manually if needed, but Zustand persist does it on set
             },
 
             _syncToServer: async () => {
+                // IMPORTANT: Never sync if we haven't successfully loaded from server yet
+                // OR if it's the very first load and we're still checking
+                if (!get().isInitialized || get().isLoading) {
+                    console.log('Skipping sync: Store not yet initialized from server');
+                    return;
+                }
+
                 // Debounce the sync to prevent deadlocks and excessive server load
                 const { _syncTimer } = get() as any;
                 if (_syncTimer) clearTimeout(_syncTimer);
@@ -176,11 +208,13 @@ export const useNetworkStore = create<NetworkState>()(
                 const timer = setTimeout(async () => {
                     try {
                         const { projects } = get();
-                        await fetch('/api/projects', {
+                        console.log('Syncing projects to server...', projects.length);
+                        const res = await fetch('/api/projects', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ projects }),
                         });
+                        if (!res.ok) console.error('Server sync failed:', res.statusText);
                     } catch (err) {
                         console.error('Failed to sync projects to server:', err);
                     }
