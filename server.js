@@ -28,8 +28,8 @@ const pool = new Pool({
 
 // Passport Setup
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID || 'dummy_id',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy_secret',
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
     try {
@@ -208,14 +208,13 @@ app.post('/auth/register', async (req, res) => {
     // Verify Cloudflare Turnstile token
     try {
         const secretKey = process.env.TURNSTILE_SECRET_KEY;
-        // Only verify if secretKey is provided and not a placeholder
-        if (secretKey && !secretKey.includes('your-turnstile')) {
-            const verifyRes = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-                secret: secretKey,
-                response: token
-            });
-            if (!verifyRes.data.success) return res.status(400).json({ error: 'CAPTCHA verification failed' });
-        }
+        if (!secretKey) return res.status(500).json({ error: 'Turnstile secret key not configured' });
+
+        const verifyRes = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            secret: secretKey,
+            response: token
+        });
+        if (!verifyRes.data.success) return res.status(400).json({ error: 'CAPTCHA verification failed' });
 
         // Check if user already exists
         const existing = await pool.query('SELECT * FROM users WHERE email = $1', [email]);

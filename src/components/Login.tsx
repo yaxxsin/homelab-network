@@ -124,7 +124,7 @@ export default function Login() {
                         <div className="captcha-wrapper">
                             <div
                                 className="cf-turnstile"
-                                data-sitekey="0x4AAAAAACW1xz9ORPH5_Guw"
+                                data-sitekey={import.meta.env.VITE_TURNSTILE_SITEKEY}
                                 data-callback="onTurnstileSuccess"
                                 data-theme="light"
                             ></div>
