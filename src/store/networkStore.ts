@@ -151,11 +151,6 @@ export const useNetworkStore = create<NetworkState>()(
                                         nextNodes = serverProject.nodes;
                                         nextEdges = serverProject.edges;
                                     }
-                                } else {
-                                    // If no project selected but server has some, pick the first one
-                                    nextProjectId = updatedProjects[0].id;
-                                    nextNodes = updatedProjects[0].nodes;
-                                    nextEdges = updatedProjects[0].edges;
                                 }
 
                                 set({
