@@ -1,2 +1,0 @@
-Deployment test file created on 2026-02-03.
-This file can be used to trigger a git push or deployment workflow.
