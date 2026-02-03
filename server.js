@@ -23,8 +23,13 @@ const app = express();
 const PORT = process.env.PORT || 3301;
 
 // Database configuration
+console.log('Initializing database pool with URL:', process.env.DATABASE_URL ? 'Configured (checking...)' : 'MISSING');
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL || 'postgres://homelab_user:homelab_password@localhost:5433/homelab_db'
+});
+
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle database client', err);
 });
 
 // Passport Setup
@@ -86,11 +91,17 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-// Middleware
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true
 }));
+
+// Request logger
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
 app.use(express.json({ limit: '50mb' }));
 
 app.use(session({
@@ -404,8 +415,20 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
     }
 });
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled Error:', err);
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+        return res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    }
+    next(err);
+});
+
 // Fallback untuk semua route lain (SPA)
 app.use(async (req, res) => {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) {
+        return res.status(404).json({ error: 'Not Found' });
+    }
     const indexPath = path.join(__dirname, 'dist', 'index.html');
     res.sendFile(indexPath);
 });
