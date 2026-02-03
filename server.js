@@ -353,7 +353,8 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
     const socket = io(url, {
         reconnection: false,
         timeout: 10000,
-        transports: ['websocket', 'polling'] // Ensure compatibility
+        transports: ['websocket', 'polling'],
+        rejectUnauthorized: false // Common for homelabs with self-signed SSL
     });
 
     try {

@@ -41,18 +41,27 @@ export default function PropertiesPanel() {
     const [newVlan, setNewVlan] = useState<VlanInfo>({ id: '', name: '', ipRange: '', gateway: '' });
     const [monitors, setMonitors] = useState<{ id: number; name: string; status: string; latency: string | null }[]>([]);
     const [isLoadingMonitors, setIsLoadingMonitors] = useState(false);
+    const [monitorError, setMonitorError] = useState<string | null>(null);
 
     useEffect(() => {
         if (selectedNode) {
             setIsLoadingMonitors(true);
+            setMonitorError(null);
             fetch('/api/uptime-kuma/monitors')
-                .then(res => res.json())
+                .then(async res => {
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Failed to fetch');
+                    return data;
+                })
                 .then(data => {
                     if (Array.isArray(data)) {
                         setMonitors(data);
                     }
                 })
-                .catch(err => console.error('Failed to fetch monitors:', err))
+                .catch(err => {
+                    console.error('Failed to fetch monitors:', err);
+                    setMonitorError(err.message);
+                })
                 .finally(() => setIsLoadingMonitors(false));
         }
     }, [selectedNode?.id]);
@@ -272,8 +281,8 @@ export default function PropertiesPanel() {
                             <option key={m.id} value={m.id.toString()}>{m.name}</option>
                         ))}
                     </select>
-                    <p className="text-xs text-slate-400 mt-1">
-                        {isLoadingMonitors ? 'Loading monitors...' : 'Select a monitor from Uptime Kuma'}
+                    <p className={`text-xs mt-1 ${monitorError ? 'text-red-400' : 'text-slate-400'}`}>
+                        {isLoadingMonitors ? 'Loading monitors...' : (monitorError ? `Error: ${monitorError}` : 'Select a monitor from Uptime Kuma')}
                     </p>
                 </div>
 
