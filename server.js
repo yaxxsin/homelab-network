@@ -397,14 +397,14 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
 
                         // Some Uptime Kuma versions send monitorList immediately or via event
                         const handleMonitorList = (list) => {
-                            console.log('Uptime Kuma Monitor List Received');
+                            console.log('Uptime Kuma Monitor List Received, first monitor:', Object.values(list)[0]);
                             clearTimeout(timeout);
                             socket.off('monitorList', handleMonitorList);
                             socket.disconnect();
                             resolve(Object.values(list).map(m => ({
                                 id: m.id,
                                 name: m.name,
-                                status: m.status === 1 ? 'online' : (m.status === 0 ? 'offline' : 'warning'),
+                                status: m.active === 0 ? 'offline' : (m.status === 1 ? 'online' : (m.status === 0 ? 'offline' : 'warning')),
                                 latency: m.ping ? `${m.ping}ms` : null,
                                 msg: m.msg
                             })));
