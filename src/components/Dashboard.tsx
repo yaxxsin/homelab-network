@@ -8,7 +8,6 @@ import {
     Network,
     Database,
     ChevronRight,
-    ChevronRight,
     X,
     Activity,
     Cpu,
@@ -332,8 +331,9 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        <div className="modal-footer" style={{ marginTop: '20px', fontSize: '12px', opacity: 0.6, textAlign: 'center' }}>
-                            Data updates automatically every 10 seconds
+                        <div className="modal-footer" style={{ marginTop: '20px', fontSize: '12px', opacity: 0.6, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {isFetchingStats && <div className="spinner-mini" />}
+                            {isFetchingStats ? 'Refreshing data...' : 'Data updates automatically every 10 seconds'}
                         </div>
                     </div>
                 </div>
