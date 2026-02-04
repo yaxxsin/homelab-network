@@ -409,7 +409,7 @@ export default function PropertiesPanel() {
 
                 {/* Custom Details CRUD */}
                 <div className="form-group border-t border-slate-700/50 pt-4 mt-2">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="section-header">
                         <label className="text-indigo-400 font-bold text-xs tracking-wider uppercase">Custom Details</label>
                         <button
                             className="btn-add-small"
