@@ -111,7 +111,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: false, // Set to false for local/homelab network without HTTPS
-        maxAge: 30 * 24 * 60 * 60 * 1000
+        maxAge: 15 * 60 * 1000
     }
 }));
 
