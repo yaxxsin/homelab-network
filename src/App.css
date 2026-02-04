@@ -91,56 +91,31 @@ body {
   padding: 0;
 }
 
-.sidebar-pin-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 24px;
-  height: 24px;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
+/* Sidebar Lock/Pin Button */
+.sidebar.collapsed .sidebar-lock-btn {
+  padding: 10px;
   justify-content: center;
-  cursor: pointer;
-  z-index: 110;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 0;
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
 }
 
-.sidebar:hover .sidebar-pin-btn,
-.sidebar.pinned .sidebar-pin-btn {
-  opacity: 1;
+.sidebar-lock-btn {
+  width: 100%;
+  margin-top: 8px;
+  transition: all 0.2s ease;
 }
 
-.sidebar-pin-btn:hover {
-  background: white;
-  color: var(--accent-primary);
-  border-color: var(--accent-primary);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
-  transform: translateY(-1px);
-}
-
-.sidebar-pin-btn.active {
+.sidebar-lock-btn.active {
   background: var(--accent-primary);
   color: white;
   border-color: var(--accent-primary);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
-.sidebar-pin-btn.active:hover {
+.sidebar-lock-btn:hover {
+  transform: translateY(-1px);
+}
+
+.sidebar-lock-btn.active:hover {
   background: var(--accent-secondary);
-  transform: translateY(-1px) scale(1.05);
-}
-
-.sidebar.collapsed .sidebar-pin-btn {
-  right: 50%;
-  transform: translateX(50%);
-  bottom: 20px;
 }
 
 .sidebar-header {

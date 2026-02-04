@@ -195,19 +195,15 @@ export default function Sidebar() {
                     <input ref={fileInputRef} type="file" accept=".json" onChange={handleFileChange} style={{ display: 'none' }} />
                 </div>
 
-                {!isCollapsed && (
-                    <div className="sidebar-footer">
-                        {/* Legend and autosave moved or removed as per request */}
-                    </div>
-                )}
-
-                <button
-                    className={`sidebar-pin-btn ${isPinned ? 'active' : ''}`}
-                    onClick={() => setIsPinned(!isPinned)}
-                    title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
-                >
-                    {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                </button>
+                <div className="sidebar-footer">
+                    <button
+                        className={`io-btn sidebar-lock-btn ${isPinned ? 'active' : ''}`}
+                        onClick={() => setIsPinned(!isPinned)}
+                    >
+                        {isPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                        {!isCollapsed && "Lock Sidebar"}
+                    </button>
+                </div>
             </aside>
 
             <AddNetworkDeviceModal

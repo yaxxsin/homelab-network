@@ -412,10 +412,10 @@ export default function PropertiesPanel() {
                     <div className="flex items-center justify-between mb-2">
                         <label className="text-indigo-400 font-bold text-xs tracking-wider uppercase">Custom Details</label>
                         <button
-                            className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-[10px] px-2 py-1 rounded transition-colors flex items-center gap-1"
+                            className="btn-add-small"
                             onClick={() => setShowAddDetail(true)}
                         >
-                            <Plus size={10} /> Add
+                            <Plus size={12} /> Add
                         </button>
                     </div>
 
