@@ -8,8 +8,14 @@ import {
     Network,
     Database,
     ChevronRight,
-    X
+    ChevronRight,
+    X,
+    Activity,
+    Cpu,
+    HardDrive,
+    Server
 } from 'lucide-react';
+import axios from 'axios';
 import { useNetworkStore } from '../store/networkStore';
 import { useAuthStore } from '../store/authStore';
 import Clock from './Clock';
@@ -26,6 +32,42 @@ export default function Dashboard() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
     const [newProjectDesc, setNewProjectDesc] = useState('');
+    const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+    const [serverStats, setServerStats] = useState<any>(null);
+    const [isFetchingStats, setIsFetchingStats] = useState(false);
+
+    const fetchServerStats = async () => {
+        try {
+            setIsFetchingStats(true);
+            const res = await axios.get('/api/server/stats');
+            setServerStats(res.data);
+        } catch (err) {
+            console.error('Failed to fetch stats:', err);
+        } finally {
+            setIsFetchingStats(false);
+        }
+    };
+
+    // Polling effect for stats
+    useState(() => {
+        let interval: any;
+        if (isStatsModalOpen) {
+            fetchServerStats();
+            interval = setInterval(fetchServerStats, 10000);
+        }
+        return () => clearInterval(interval);
+    });
+
+    useState(() => {
+        if (isStatsModalOpen) {
+            fetchServerStats();
+        }
+    });
+
+    const openStats = () => {
+        setIsStatsModalOpen(true);
+        fetchServerStats();
+    };
 
     const filteredProjects = projects.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,6 +119,10 @@ export default function Dashboard() {
                         <button className="btn-create" onClick={() => setIsCreateModalOpen(true)}>
                             <Plus size={20} />
                             New Project
+                        </button>
+                        <button className="btn-stats" onClick={openStats}>
+                            <Activity size={20} />
+                            Server Status
                         </button>
                         <Clock />
 
@@ -190,6 +236,105 @@ export default function Dashboard() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {isStatsModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content stats-modal">
+                        <div className="modal-header">
+                            <div className="flex items-center gap-2">
+                                <Activity className="text-indigo-500" size={24} />
+                                <h2>Server Resource Monitor</h2>
+                            </div>
+                            <button className="btn-close" onClick={() => setIsStatsModalOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {serverStats ? (
+                            <div className="stats-grid">
+                                <div className="stats-card">
+                                    <div className="stats-card-header">
+                                        <Cpu size={20} />
+                                        <span>CPU Usage</span>
+                                    </div>
+                                    <div className="stats-value">{serverStats.cpu.load}%</div>
+                                    <div className="progress-bar-bg">
+                                        <div
+                                            className="progress-bar-fill"
+                                            style={{ width: `${serverStats.cpu.load}%`, backgroundColor: serverStats.cpu.load > 80 ? '#ef4444' : '#6366f1' }}
+                                        />
+                                    </div>
+                                    <div className="stats-detail">{serverStats.cpu.cores} Cores</div>
+                                </div>
+
+                                <div className="stats-card">
+                                    <div className="stats-card-header">
+                                        <Database size={20} />
+                                        <span>Memory (RAM)</span>
+                                    </div>
+                                    <div className="stats-value">{serverStats.memory.percentage}%</div>
+                                    <div className="progress-bar-bg">
+                                        <div
+                                            className="progress-bar-fill"
+                                            style={{ width: `${serverStats.memory.percentage}%`, backgroundColor: serverStats.memory.percentage > 85 ? '#ef4444' : '#10b981' }}
+                                        />
+                                    </div>
+                                    <div className="stats-detail">{serverStats.memory.used} / {serverStats.memory.total} GB</div>
+                                </div>
+
+                                <div className="stats-card">
+                                    <div className="stats-card-header">
+                                        <HardDrive size={20} />
+                                        <span>Disk Storage</span>
+                                    </div>
+                                    <div className="stats-value">{serverStats.storage.percentage}%</div>
+                                    <div className="progress-bar-bg">
+                                        <div
+                                            className="progress-bar-fill"
+                                            style={{ width: `${serverStats.storage.percentage}%`, backgroundColor: serverStats.storage.percentage > 90 ? '#ef4444' : '#f59e0b' }}
+                                        />
+                                    </div>
+                                    <div className="stats-detail">{serverStats.storage.used} / {serverStats.storage.total} GB</div>
+                                </div>
+
+                                <div className="stats-card full-width">
+                                    <div className="stats-card-header">
+                                        <Server size={20} />
+                                        <span>System Information</span>
+                                    </div>
+                                    <div className="system-info-grid">
+                                        <div className="info-item">
+                                            <label>Hostname</label>
+                                            <p>{serverStats.os.hostname}</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>OS Platform</label>
+                                            <p>{serverStats.os.distro} ({serverStats.os.platform})</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Server Uptime</label>
+                                            <p>{serverStats.uptime} Hours</p>
+                                        </div>
+                                        <div className="info-item">
+                                            <label>Status</label>
+                                            <p className="status-online">Healthy</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="stats-loading">
+                                <div className="spinner"></div>
+                                <p>Collecting data from server...</p>
+                            </div>
+                        )}
+
+                        <div className="modal-footer" style={{ marginTop: '20px', fontSize: '12px', opacity: 0.6, textAlign: 'center' }}>
+                            Data updates automatically every 10 seconds
+                        </div>
                     </div>
                 </div>
             )}

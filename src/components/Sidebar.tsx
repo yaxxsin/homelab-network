@@ -8,8 +8,9 @@ import {
     Trash2,
     Monitor,
     ChevronLeft,
-    ChevronRight,
     Image,
+    Pin,
+    PinOff
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import type { LucideIcon } from 'lucide-react';
@@ -196,12 +197,7 @@ export default function Sidebar() {
 
                 {!isCollapsed && (
                     <div className="sidebar-footer">
-                        <div className="legend">
-                            <div className="legend-item"><span className="legend-dot online"></span><span>Online</span></div>
-                            <div className="legend-item"><span className="legend-dot offline"></span><span>Offline</span></div>
-                            <div className="legend-item"><span className="legend-dot warning"></span><span>Warning</span></div>
-                        </div>
-                        <div className="autosave-indicator">✓ Autosave enabled</div>
+                        {/* Legend and autosave moved or removed as per request */}
                     </div>
                 )}
 
@@ -210,7 +206,7 @@ export default function Sidebar() {
                     onClick={() => setIsPinned(!isPinned)}
                     title={isPinned ? "Unpin Sidebar" : "Pin Sidebar"}
                 >
-                    {isPinned ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                    {isPinned ? <PinOff size={14} /> : <Pin size={14} />}
                 </button>
             </aside>
 

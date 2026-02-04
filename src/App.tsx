@@ -20,7 +20,7 @@ import { useNetworkStore } from './store/networkStore';
 import { useAuthStore } from './store/authStore';
 import Login from './components/Login';
 import type { HardwareNode as HardwareNodeType, HardwareType, CustomEdge } from './store/networkStore';
-import { RotateCcw, RotateCw } from 'lucide-react';
+import { RotateCcw, RotateCw, MousePointer2, Zap, CloudCheck } from 'lucide-react';
 import './App.css';
 import Clock from './components/Clock';
 
@@ -169,9 +169,24 @@ function Flow() {
             <RotateCw size={16} />
           </button>
           <div className="toolbar-divider" />
-          <span className="toolbar-status">
-            {connectionMode ? 'Connection Mode Active' : 'Select or Drag to Edit'}
-          </span>
+          <div className="toolbar-status-wrapper">
+            {connectionMode ? (
+              <div className="toolbar-status active">
+                <Zap size={14} className="status-icon pulse" />
+                <span>Connection Mode Active</span>
+              </div>
+            ) : (
+              <div className="toolbar-status">
+                <MousePointer2 size={14} className="status-icon" />
+                <span>Select or Drag to Edit</span>
+              </div>
+            )}
+          </div>
+          <div className="toolbar-divider" />
+          <div className="toolbar-autosave" title="Your changes are automatically saved">
+            <CloudCheck size={14} className="text-success" />
+            <span>Autosaved</span>
+          </div>
           <div className="toolbar-divider" />
           <Clock />
         </div>

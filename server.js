@@ -12,6 +12,7 @@ import bcrypt from 'bcrypt';
 import connectPg from 'connect-pg-simple';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import si from 'systeminformation';
 
 const { Pool } = pkg;
 const PostgresStore = connectPg(session);
@@ -456,6 +457,47 @@ app.get('/api/uptime-kuma/monitors', isAuthenticated, async (req, res) => {
         if (!res.headersSent) {
             res.status(500).json({ error: err.message });
         }
+    }
+});
+
+// Server Metrics Endpoint
+app.get('/api/server/stats', isAuthenticated, async (req, res) => {
+    try {
+        const [cpu, mem, disk, os, uptime] = await Promise.all([
+            si.currentLoad(),
+            si.mem(),
+            si.fsSize(),
+            si.osInfo(),
+            si.time()
+        ]);
+
+        const mainDisk = disk[0] || { size: 0, used: 0 };
+
+        res.json({
+            cpu: {
+                load: cpu.currentLoad.toFixed(1),
+                cores: cpu.cpus.length
+            },
+            memory: {
+                total: (mem.total / 1024 / 1024 / 1024).toFixed(2),
+                used: (mem.active / 1024 / 1024 / 1024).toFixed(2),
+                percentage: ((mem.active / mem.total) * 100).toFixed(1)
+            },
+            storage: {
+                total: (mainDisk.size / 1024 / 1024 / 1024).toFixed(2),
+                used: (mainDisk.used / 1024 / 1024 / 1024).toFixed(2),
+                percentage: mainDisk.use.toFixed(1)
+            },
+            os: {
+                platform: os.platform,
+                distro: os.distro,
+                hostname: os.hostname
+            },
+            uptime: Math.floor(uptime.uptime / 3600) // Hours
+        });
+    } catch (err) {
+        console.error('Failed to fetch server stats:', err);
+        res.status(500).json({ error: 'Failed to fetch server stats' });
     }
 });
 
