@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Network, ShieldCheck, Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 export default function Login() {
@@ -68,9 +68,9 @@ export default function Login() {
             <div className="login-card">
                 <div className="brand-section">
                     <div className="brand-icon-large">
-                        <Network size={40} color="#fff" />
+                        <img src="/netwatch.png" alt="Netwatch Logo" style={{ width: '40px', height: '40px' }} />
                     </div>
-                    <h1>Network Designer</h1>
+                    <h1>Netwatch</h1>
                     <p>Building secure infrastructures, together.</p>
                 </div>
 

@@ -140,7 +140,7 @@ export default function Sidebar() {
                     </button>
                     {!isCollapsed && (
                         <>
-                            <h2>{currentProject?.name || 'Network Designer'}</h2>
+                            <h2>{currentProject?.name || 'Netwatch'}</h2>
                             <p>{currentProject?.description || 'Design your network topology'}</p>
                         </>
                     )}

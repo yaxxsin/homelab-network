@@ -97,10 +97,10 @@ export default function Dashboard() {
                 <div className="dashboard-header-inner">
                     <div className="brand">
                         <div className="brand-icon">
-                            <Network size={24} color="#fff" />
+                            <img src="/netwatch.png" alt="Netwatch Logo" style={{ width: '24px', height: '24px' }} />
                         </div>
                         <div>
-                            <h1>Network Designer</h1>
+                            <h1>Netwatch</h1>
                             <p>Manage your infrastructure topologies</p>
                         </div>
                     </div>
