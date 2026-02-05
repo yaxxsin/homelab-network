@@ -9,7 +9,9 @@ export type HardwareType =
     // Network Types
     | 'router' | 'switch' | 'server' | 'pc' | 'laptop' | 'cloud' | 'isp' | 'cctv' | 'accesspoint' | 'ont' | 'mikrotik' | 'proxmox' | 'docker' | 'nas' | 'firewall'
     // Electrical Types
-    | 'power_strip' | 'adapter' | 'dock' | 'kvm' | 'monitor_display' | 'peripheral' | 'controller' | 'hub' | 'power_source' | 'ups';
+    | 'power_strip' | 'adapter' | 'dock' | 'kvm' | 'monitor_display' | 'peripheral' | 'controller' | 'hub' | 'power_source' | 'ups'
+    // Shape Types
+    | 'shape';
 
 export interface ElectricalPort {
     id: string;
@@ -42,6 +44,15 @@ export interface HardwareNodeData extends Record<string, unknown> {
     hardwareType: HardwareType;
     ip?: string;
     status: 'online' | 'offline' | 'warning';
+    // Shape/Generic properties
+    width?: number;
+    height?: number;
+    backgroundColor?: string;
+    borderColor?: string;
+    borderStyle?: 'solid' | 'dashed' | 'dotted';
+    fontSize?: number;
+    textColor?: string;
+    shapeType?: 'rectangle' | 'circle';
     ports?: number;
     description?: string;
     location?: string;
@@ -70,7 +81,7 @@ export interface HardwareNodeData extends Record<string, unknown> {
     current?: string;
 }
 
-export type HardwareNode = Node<HardwareNodeData, 'hardware' | 'electrical'>;
+export type HardwareNode = Node<HardwareNodeData, 'hardware' | 'electrical' | 'shape'>;
 
 // Enhanced Edge with network info
 export interface CustomEdge extends Edge {
@@ -420,9 +431,11 @@ export const useNetworkStore = create<NetworkState>()(
 
             addNodeFromData: (data) => {
                 get().takeSnapshot();
+                const nodeType = data.hardwareType === 'shape' ? 'shape' :
+                    (get().projects.find(p => p.id === get().currentProjectId)?.type === 'electrical' ? 'electrical' : 'hardware');
                 const newNode: HardwareNode = {
                     id: getNodeId(),
-                    type: 'hardware',
+                    type: nodeType,
                     position: { x: 250 + Math.random() * 200, y: 150 + Math.random() * 200 },
                     data,
                 };

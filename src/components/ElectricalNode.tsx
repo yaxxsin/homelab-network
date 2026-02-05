@@ -79,14 +79,13 @@ function ElectricalNode({ id, data, selected }: NodeProps<ElectricalNodeType>) {
                             id={port.id}
                             className={`port-handle port-${port.type}`}
                         />
-                        <span className="port-label">{port.label}</span>
                     </div>
                 ))}
             </div>
 
             <div className="electrical-node-body">
                 <div className="electrical-icon" style={{ backgroundColor: accentColor }}>
-                    <Icon size={24} color="white" strokeWidth={2} />
+                    <Icon size={20} color="white" strokeWidth={2} />
                 </div>
                 <div className="electrical-info">
                     <h4 className="electrical-title">{nodeData.label}</h4>
@@ -98,7 +97,6 @@ function ElectricalNode({ id, data, selected }: NodeProps<ElectricalNodeType>) {
             <div className="ports-column-right">
                 {outputs.map((port) => (
                     <div key={port.id} className="port-wrapper text-right">
-                        <span className="port-label">{port.label}</span>
                         <Handle
                             type="source"
                             position={Position.Right}
@@ -112,8 +110,8 @@ function ElectricalNode({ id, data, selected }: NodeProps<ElectricalNodeType>) {
             {/* Default handles if no ports defined */}
             {ports.length === 0 && (
                 <>
-                    <Handle type="target" position={Position.Left} className="handle-modern" />
-                    <Handle type="source" position={Position.Right} className="handle-modern" />
+                    <Handle type="target" position={Position.Left} className="port-handle" />
+                    <Handle type="source" position={Position.Right} className="port-handle" />
                 </>
             )}
         </div>

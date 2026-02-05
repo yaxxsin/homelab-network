@@ -13,6 +13,7 @@ import '@xyflow/react/dist/style.css';
 
 import HardwareNode from './components/HardwareNode';
 import ElectricalNode from './components/ElectricalNode';
+import ShapeNode from './components/ShapeNode';
 import AnimatedEdge from './components/AnimatedEdge';
 import Sidebar from './components/Sidebar';
 import PropertiesPanel from './components/PropertiesPanel';
@@ -28,6 +29,7 @@ import Clock from './components/Clock';
 const nodeTypes = {
   hardware: HardwareNode,
   electrical: ElectricalNode,
+  shape: ShapeNode,
 } as const;
 
 const edgeTypes = {
@@ -74,14 +76,30 @@ function Flow() {
       });
 
       const project = useNetworkStore.getState().projects.find(p => p.id === useNetworkStore.getState().currentProjectId);
+      let nodeType: 'hardware' | 'electrical' | 'shape' = 'hardware';
+
+      if (type === 'shape') {
+        nodeType = 'shape';
+      } else if (project?.type === 'electrical') {
+        nodeType = 'electrical';
+      }
+
       const newNode: any = {
         id: getId(),
-        type: project?.type === 'electrical' ? 'electrical' : 'hardware',
+        type: nodeType,
         position,
         data: {
           label: `${label} ${id}`,
           hardwareType: type,
           status: 'online',
+          // Default shape properties if applicable
+          ...(type === 'shape' ? {
+            backgroundColor: '#cbd5e1',
+            borderColor: '#64748b',
+            shapeType: 'rectangle',
+            width: 150,
+            height: 100
+          } : {})
         },
       };
 
@@ -132,6 +150,7 @@ function Flow() {
       hub: '#10b981',
       power_source: '#f43f5e',
       ups: '#059669',
+      shape: '#64748b',
     };
     return colors[node.data.hardwareType] || '#888';
   };

@@ -11,7 +11,8 @@ import {
     Image,
     Pin,
     PinOff,
-    Plug
+    Plug,
+    Square
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import type { LucideIcon } from 'lucide-react';
@@ -23,6 +24,7 @@ import {
     AddNetworkDeviceModal,
     AddServerModal,
     AddElectricalDeviceModal,
+    AddShapeModal,
     type ModalType,
 } from './AddElementModals';
 
@@ -39,6 +41,7 @@ const addElementButtons: AddElementButton[] = [
     { type: 'server', label: 'Add Server', icon: Server, color: '#fff', bgColor: '#f59e0b' },
     { type: 'device', label: 'Add Device', icon: Monitor, color: '#fff', bgColor: '#3b82f6' },
     { type: 'electrical', label: 'Add Electrical', icon: Plug, color: '#fff', bgColor: '#f59e0b' },
+    { type: 'shape', label: 'Add Shape', icon: Square, color: '#fff', bgColor: '#8b5cf6' },
     { type: 'connection', label: 'Add Connection', icon: Link2, color: '#fff', bgColor: '#22c55e' },
 ];
 
@@ -155,7 +158,7 @@ export default function Sidebar() {
                         {addElementButtons
                             .filter(btn => {
                                 if (currentProject?.type === 'electrical') {
-                                    return btn.type === 'electrical' || btn.type === 'connection';
+                                    return btn.type === 'electrical' || btn.type === 'connection' || btn.type === 'shape';
                                 }
                                 return btn.type !== 'electrical';
                             })
@@ -239,6 +242,11 @@ export default function Sidebar() {
             />
             <AddElectricalDeviceModal
                 isOpen={activeModal === 'electrical'}
+                onClose={() => setActiveModal(null)}
+                onAdd={handleAddDevice}
+            />
+            <AddShapeModal
+                isOpen={activeModal === 'shape'}
                 onClose={() => setActiveModal(null)}
                 onAdd={handleAddDevice}
             />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import type { HardwareType, HardwareNodeData, CustomEdge, VlanInfo, ApplicationInfo } from '../store/networkStore';
 
-export type ModalType = 'device' | 'connection' | 'server' | 'network' | 'electrical' | null;
+export type ModalType = 'device' | 'connection' | 'server' | 'network' | 'electrical' | 'shape' | null;
 
 interface AddDeviceModalProps {
     isOpen: boolean;
@@ -843,6 +843,107 @@ export function EditCustomDetailModal({ isOpen, onClose, detail, onSave, onDelet
                         <div style={{ flex: 1 }}></div>
                         <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
                         <button type="submit" className="btn-submit">{isNew ? 'Add Detail' : 'Save Changes'}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+interface AddShapeModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (data: Partial<HardwareNodeData> & { hardwareType: 'shape' }) => void;
+}
+
+export function AddShapeModal({ isOpen, onClose, onAdd }: AddShapeModalProps) {
+    const [name, setName] = useState('');
+    const [shapeType, setShapeType] = useState<'rectangle' | 'circle'>('rectangle');
+    const [color, setColor] = useState('#cbd5e1');
+
+    const colors = [
+        { label: 'Gray', value: '#cbd5e1' },
+        { label: 'Blue', value: '#93c5fd' },
+        { label: 'Green', value: '#81ecac' },
+        { label: 'Yellow', value: '#fde047' },
+        { label: 'Red', value: '#fca5a5' },
+        { label: 'Indigo', value: '#a5b4fc' },
+        { label: 'Purple', value: '#d8b4fe' },
+        { label: 'Orange', value: '#fdba74' },
+    ];
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onAdd({
+            label: name || 'New Shape',
+            hardwareType: 'shape',
+            shapeType: shapeType,
+            backgroundColor: color,
+            borderColor: '#64748b',
+            textColor: '#1e293b',
+            width: 150,
+            height: 100,
+            status: 'online',
+        });
+        setName('');
+        onClose();
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Add Custom Shape</h2>
+                    <button className="modal-close" onClick={onClose}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-group">
+                            <label>Shape Label:</label>
+                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Zone A, DMZ, etc." />
+                        </div>
+                        <div className="form-group">
+                            <label>Shape Type:</label>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    className={`btn-selector ${shapeType === 'rectangle' ? 'active' : ''}`}
+                                    onClick={() => setShapeType('rectangle')}
+                                    style={{ flex: 1, padding: '10px' }}
+                                >
+                                    Rectangle
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn-selector ${shapeType === 'circle' ? 'active' : ''}`}
+                                    onClick={() => setShapeType('circle')}
+                                    style={{ flex: 1, padding: '10px' }}
+                                >
+                                    Circle
+                                </button>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label>Background Color:</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {colors.map((c) => (
+                                    <button
+                                        key={c.value}
+                                        type="button"
+                                        className={`color-swatch ${color === c.value ? 'active' : ''}`}
+                                        style={{ backgroundColor: c.value, height: '30px', borderRadius: '4px', border: color === c.value ? '2px solid #6366f1' : '1px solid #e2e8f0' }}
+                                        onClick={() => setColor(c.value)}
+                                        title={c.label}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Add Shape</button>
                     </div>
                 </form>
             </div>
