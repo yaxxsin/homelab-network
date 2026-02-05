@@ -18,6 +18,13 @@ import {
     Shield,
     Check,
     AlertTriangle,
+    Zap,
+    Plug,
+    Usb,
+    SlidersHorizontal,
+    Activity,
+    Wind,
+    BatteryMedium,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { HardwareNodeData, HardwareType } from '../store/networkStore';
@@ -39,6 +46,17 @@ const iconMap: Record<HardwareType, LucideIcon> = {
     docker: Box,
     nas: Database,
     firewall: Shield,
+    // Electrical Types
+    power_strip: Zap,
+    adapter: Plug,
+    dock: Layers,
+    kvm: Box,
+    monitor_display: Monitor,
+    peripheral: Usb,
+    controller: SlidersHorizontal,
+    hub: Activity,
+    power_source: Wind,
+    ups: BatteryMedium,
 };
 
 const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
@@ -57,6 +75,17 @@ const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
     docker: { bg: 'linear-gradient(135deg, #243949 0%, #517fa4 100%)', accent: '#243949' },
     nas: { bg: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)', accent: '#0ba360' },
     firewall: { bg: 'linear-gradient(135deg, #ed213a 0%, #93291e 100%)', accent: '#ed213a' },
+    // Electrical Types (using similar palette)
+    power_strip: { bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', accent: '#f59e0b' },
+    adapter: { bg: 'linear-gradient(135deg, #fbbf24 0%, #b45309 100%)', accent: '#fbbf24' },
+    dock: { bg: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', accent: '#6366f1' },
+    kvm: { bg: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', accent: '#3b82f6' },
+    monitor_display: { bg: 'linear-gradient(135deg, #06b6d4 0%, #0e7490 100%)', accent: '#06b6d4' },
+    peripheral: { bg: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', accent: '#8b5cf6' },
+    controller: { bg: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', accent: '#ec4899' },
+    hub: { bg: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', accent: '#10b981' },
+    power_source: { bg: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)', accent: '#f43f5e' },
+    ups: { bg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)', accent: '#059669' },
 };
 
 const typeLabels: Record<HardwareType, string> = {
@@ -75,6 +104,17 @@ const typeLabels: Record<HardwareType, string> = {
     docker: 'Docker',
     nas: 'NAS',
     firewall: 'Firewall',
+    // Electrical Labels
+    power_strip: 'Power Strip',
+    adapter: 'Adapter',
+    dock: 'Docking Station',
+    kvm: 'KVM Switch',
+    monitor_display: 'Monitor/Display',
+    peripheral: 'Peripheral',
+    controller: 'Controller',
+    hub: 'USB/Data Hub',
+    power_source: 'Power Source',
+    ups: 'UPS',
 };
 
 type HardwareNodeType = Node<HardwareNodeData, 'hardware'>;
