@@ -31,6 +31,7 @@ const typeLabels: Record<HardwareType, string> = {
     hub: 'USB/DATA HUB',
     power_source: 'POWER SOURCE',
     ups: 'UPS',
+    shape: 'SHAPE',
 };
 
 export default function PropertiesPanel() {

@@ -57,6 +57,7 @@ const iconMap: Record<HardwareType, LucideIcon> = {
     hub: Activity,
     power_source: Wind,
     ups: BatteryMedium,
+    shape: Box,
 };
 
 const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
@@ -86,6 +87,7 @@ const colorMap: Record<HardwareType, { bg: string; accent: string }> = {
     hub: { bg: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', accent: '#10b981' },
     power_source: { bg: 'linear-gradient(135deg, #f43f5e 0%, #be123c 100%)', accent: '#f43f5e' },
     ups: { bg: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)', accent: '#059669' },
+    shape: { bg: 'linear-gradient(135deg, #64748b 0%, #475569 100%)', accent: '#64748b' },
 };
 
 const typeLabels: Record<HardwareType, string> = {
@@ -115,6 +117,7 @@ const typeLabels: Record<HardwareType, string> = {
     hub: 'USB/Data Hub',
     power_source: 'Power Source',
     ups: 'UPS',
+    shape: 'Shape',
 };
 
 type HardwareNodeType = Node<HardwareNodeData, 'hardware'>;
