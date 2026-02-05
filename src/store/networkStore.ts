@@ -3,7 +3,20 @@ import { persist } from 'zustand/middleware';
 import type { Edge, Node, OnNodesChange, OnEdgesChange, Connection } from '@xyflow/react';
 import { applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react';
 
-export type HardwareType = 'router' | 'switch' | 'server' | 'pc' | 'laptop' | 'cloud' | 'isp' | 'cctv' | 'accesspoint' | 'ont' | 'mikrotik' | 'proxmox' | 'docker' | 'nas' | 'firewall';
+export type ProjectType = 'network' | 'electrical';
+
+export type HardwareType =
+    // Network Types
+    | 'router' | 'switch' | 'server' | 'pc' | 'laptop' | 'cloud' | 'isp' | 'cctv' | 'accesspoint' | 'ont' | 'mikrotik' | 'proxmox' | 'docker' | 'nas' | 'firewall'
+    // Electrical Types
+    | 'power_strip' | 'adapter' | 'dock' | 'kvm' | 'monitor_display' | 'peripheral' | 'controller' | 'hub' | 'power_source' | 'ups';
+
+export interface ElectricalPort {
+    id: string;
+    type: 'usb-a' | 'usb-c' | 'hdmi' | 'displayport' | 'power' | 'network' | 'audio' | 'vga' | 'dvi';
+    label: string;
+    direction: 'input' | 'output' | 'both';
+}
 
 // Application info that lives inside servers
 export interface ApplicationInfo {
@@ -50,9 +63,14 @@ export interface HardwareNodeData extends Record<string, unknown> {
     cpu?: string;
     ram?: string;
     storage?: string;
+    // Electrical specific
+    electricalPorts?: ElectricalPort[];
+    voltage?: string;
+    wattage?: string;
+    current?: string;
 }
 
-export type HardwareNode = Node<HardwareNodeData, 'hardware'>;
+export type HardwareNode = Node<HardwareNodeData, 'hardware' | 'electrical'>;
 
 // Enhanced Edge with network info
 export interface CustomEdge extends Edge {
@@ -73,6 +91,7 @@ export interface CustomEdge extends Edge {
 export interface Project {
     id: string;
     name: string;
+    type: ProjectType;
     description?: string;
     updatedAt: number;
     nodes: HardwareNode[];
@@ -91,7 +110,7 @@ interface NetworkState {
     future: { nodes: HardwareNode[], edges: CustomEdge[] }[];
 
     // Project Actions
-    createProject: (name: string, description?: string) => void;
+    createProject: (name: string, type: ProjectType, description?: string) => void;
     selectProject: (id: string) => void;
     deleteProject: (id: string) => void;
     backToDashboard: () => void;
@@ -281,11 +300,12 @@ export const useNetworkStore = create<NetworkState>()(
                 get()._sync();
             },
 
-            createProject: (name, description) => {
+            createProject: (name, type, description) => {
                 get().takeSnapshot();
                 const newProject: Project = {
                     id: `proj_${Date.now()}`,
                     name: name || 'Untitled Project',
+                    type: type || 'network',
                     description: description || '',
                     updatedAt: Date.now(),
                     nodes: [],

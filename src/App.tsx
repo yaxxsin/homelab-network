@@ -12,6 +12,7 @@ import type { ReactFlowInstance, EdgeMouseHandler } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import HardwareNode from './components/HardwareNode';
+import ElectricalNode from './components/ElectricalNode';
 import AnimatedEdge from './components/AnimatedEdge';
 import Sidebar from './components/Sidebar';
 import PropertiesPanel from './components/PropertiesPanel';
@@ -26,6 +27,7 @@ import Clock from './components/Clock';
 
 const nodeTypes = {
   hardware: HardwareNode,
+  electrical: ElectricalNode,
 } as const;
 
 const edgeTypes = {
@@ -71,9 +73,10 @@ function Flow() {
         y: event.clientY - bounds.top,
       });
 
-      const newNode: HardwareNodeType = {
+      const project = useNetworkStore.getState().projects.find(p => p.id === useNetworkStore.getState().currentProjectId);
+      const newNode: any = {
         id: getId(),
-        type: 'hardware',
+        type: project?.type === 'electrical' ? 'electrical' : 'hardware',
         position,
         data: {
           label: `${label} ${id}`,
@@ -118,6 +121,17 @@ function Flow() {
       docker: '#243949',
       nas: '#0ba360',
       firewall: '#ed213a',
+      // Electrical Types
+      power_strip: '#f59e0b',
+      adapter: '#fbbf24',
+      dock: '#6366f1',
+      kvm: '#3b82f6',
+      monitor_display: '#06b6d4',
+      peripheral: '#8b5cf6',
+      controller: '#ec4899',
+      hub: '#10b981',
+      power_source: '#f43f5e',
+      ups: '#059669',
     };
     return colors[node.data.hardwareType] || '#888';
   };

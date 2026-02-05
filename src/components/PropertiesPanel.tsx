@@ -20,6 +20,17 @@ const typeLabels: Record<HardwareType, string> = {
     docker: 'DOCKER HOST',
     nas: 'NAS (STORAGE)',
     firewall: 'FIREWALL',
+    // Electrical Types
+    power_strip: 'POWER STRIP',
+    adapter: 'ADAPTER',
+    dock: 'DOCKING STATION',
+    kvm: 'KVM SWITCH',
+    monitor_display: 'MONITOR / DISPLAY',
+    peripheral: 'PERIPHERAL',
+    controller: 'CONTROLLER',
+    hub: 'USB/DATA HUB',
+    power_source: 'POWER SOURCE',
+    ups: 'UPS',
 };
 
 export default function PropertiesPanel() {
@@ -313,7 +324,6 @@ export default function PropertiesPanel() {
                         placeholder="SN123456789"
                     />
                 </div>
-
                 {isServer && (
                     <div className="form-row">
                         <div className="form-group">
@@ -329,6 +339,43 @@ export default function PropertiesPanel() {
                             <input type="text" value={selectedNode.data.storage || ''} onChange={(e) => updateNode(selectedNode.id, { storage: e.target.value })} placeholder="512GB SSD" />
                         </div>
                     </div>
+                )}
+
+                {/* Electrical Properties for Electrical Nodes */}
+                {selectedNode.type === 'electrical' && (
+                    <>
+                        <div className="section-title">Electrical Properties</div>
+                        <div className="form-group">
+                            <label>Wattage (W)</label>
+                            <input
+                                type="text"
+                                value={selectedNode.data.wattage || ''}
+                                onChange={(e) => updateNode(selectedNode.id, { wattage: e.target.value })}
+                                placeholder="e.g., 50"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Voltage</label>
+                            <select
+                                value={selectedNode.data.voltage || '220V'}
+                                onChange={(e) => updateNode(selectedNode.id, { voltage: e.target.value })}
+                            >
+                                <option value="220V">220V</option>
+                                <option value="110V">110V</option>
+                                <option value="12V">12V DC</option>
+                                <option value="5V">5V DC</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Current (A)</label>
+                            <input
+                                type="text"
+                                value={selectedNode.data.current || ''}
+                                onChange={(e) => updateNode(selectedNode.id, { current: e.target.value })}
+                                placeholder="e.g., 0.5"
+                            />
+                        </div>
+                    </>
                 )}
 
                 {/* VLANs for Network Devices */}

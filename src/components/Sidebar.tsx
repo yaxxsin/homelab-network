@@ -10,7 +10,8 @@ import {
     ChevronLeft,
     Image,
     Pin,
-    PinOff
+    PinOff,
+    Plug
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import type { LucideIcon } from 'lucide-react';
@@ -21,6 +22,7 @@ import {
     AddConnectionModal,
     AddNetworkDeviceModal,
     AddServerModal,
+    AddElectricalDeviceModal,
     type ModalType,
 } from './AddElementModals';
 
@@ -36,6 +38,7 @@ const addElementButtons: AddElementButton[] = [
     { type: 'network', label: 'Add Network Device', icon: Network, color: '#fff', bgColor: '#6366f1' },
     { type: 'server', label: 'Add Server', icon: Server, color: '#fff', bgColor: '#f59e0b' },
     { type: 'device', label: 'Add Device', icon: Monitor, color: '#fff', bgColor: '#3b82f6' },
+    { type: 'electrical', label: 'Add Electrical', icon: Plug, color: '#fff', bgColor: '#f59e0b' },
     { type: 'connection', label: 'Add Connection', icon: Link2, color: '#fff', bgColor: '#22c55e' },
 ];
 
@@ -149,18 +152,25 @@ export default function Sidebar() {
                 <div className="add-elements-section">
                     <h3>{isCollapsed ? "Add" : "Add Elements"}</h3>
                     <div className="add-elements-list">
-                        {addElementButtons.map((btn) => (
-                            <button
-                                key={btn.type}
-                                className="add-element-btn"
-                                style={{ backgroundColor: btn.bgColor }}
-                                onClick={() => setActiveModal(btn.type)}
-                                title={isCollapsed ? btn.label : ""}
-                            >
-                                <btn.icon size={16} />
-                                {!isCollapsed && btn.label}
-                            </button>
-                        ))}
+                        {addElementButtons
+                            .filter(btn => {
+                                if (currentProject?.type === 'electrical') {
+                                    return btn.type === 'electrical' || btn.type === 'connection';
+                                }
+                                return btn.type !== 'electrical';
+                            })
+                            .map((btn) => (
+                                <button
+                                    key={btn.type}
+                                    className="add-element-btn"
+                                    style={{ backgroundColor: btn.bgColor }}
+                                    onClick={() => setActiveModal(btn.type)}
+                                    title={isCollapsed ? btn.label : ""}
+                                >
+                                    <btn.icon size={16} />
+                                    {!isCollapsed && btn.label}
+                                </button>
+                            ))}
                     </div>
                 </div>
 
@@ -226,6 +236,11 @@ export default function Sidebar() {
                 onClose={() => setActiveModal(null)}
                 onAdd={handleAddConnection}
                 nodes={nodesList}
+            />
+            <AddElectricalDeviceModal
+                isOpen={activeModal === 'electrical'}
+                onClose={() => setActiveModal(null)}
+                onAdd={handleAddDevice}
             />
         </>
     );

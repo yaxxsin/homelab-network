@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import type { HardwareType, HardwareNodeData, CustomEdge, VlanInfo, ApplicationInfo } from '../store/networkStore';
 
-export type ModalType = 'device' | 'connection' | 'server' | 'network' | null;
+export type ModalType = 'device' | 'connection' | 'server' | 'network' | 'electrical' | null;
 
 interface AddDeviceModalProps {
     isOpen: boolean;
@@ -555,6 +555,120 @@ interface EditApplicationModalProps {
     app: ApplicationInfo;
     onSave: (updatedApp: ApplicationInfo) => void;
     onDelete: () => void;
+}
+
+const electricalDeviceTypes: { value: HardwareType; label: string }[] = [
+    { value: 'power_strip', label: 'Power Strip' },
+    { value: 'adapter', label: 'Adapter' },
+    { value: 'dock', label: 'Docking Station' },
+    { value: 'kvm', label: 'KVM Switch' },
+    { value: 'monitor_display', label: 'Monitor / Display' },
+    { value: 'peripheral', label: 'Peripheral (USB/etc)' },
+    { value: 'controller', label: 'Controller' },
+    { value: 'hub', label: 'USB/Data Hub' },
+    { value: 'power_source', label: 'Power Source (Wall/UPS)' },
+    { value: 'ups', label: 'UPS' },
+];
+
+interface AddElectricalDeviceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onAdd: (data: Partial<HardwareNodeData> & { hardwareType: HardwareType }) => void;
+}
+
+export function AddElectricalDeviceModal({ isOpen, onClose, onAdd }: AddElectricalDeviceModalProps) {
+    const [name, setName] = useState('');
+    const [deviceType, setDeviceType] = useState<HardwareType>('power_strip');
+    const [wattage, setWattage] = useState('');
+    const [voltage, setVoltage] = useState('220V');
+    const [location, setLocation] = useState('');
+    const [description, setDescription] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onAdd({
+            label: name || `${deviceType.replace('_', ' ')}`,
+            hardwareType: deviceType,
+            wattage: wattage || undefined,
+            voltage: voltage || undefined,
+            location: location || undefined,
+            description: description || undefined,
+            status: 'online',
+        });
+        resetForm();
+        onClose();
+    };
+
+    const resetForm = () => {
+        setName('');
+        setDeviceType('power_strip');
+        setWattage('');
+        setVoltage('220V');
+        setLocation('');
+        setDescription('');
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2>Add Electrical Component</h2>
+                    <button className="modal-close" onClick={onClose}>
+                        <X size={20} />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Asset Name:</label>
+                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Main Power Strip" />
+                            </div>
+                            <div className="form-group">
+                                <label>Component Type:</label>
+                                <select value={deviceType} onChange={(e) => setDeviceType(e.target.value as HardwareType)}>
+                                    {electricalDeviceTypes.map((type) => (
+                                        <option key={type.value} value={type.value}>{type.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Wattage (W):</label>
+                                <input type="text" value={wattage} onChange={(e) => setWattage(e.target.value)} placeholder="e.g. 50" />
+                            </div>
+                            <div className="form-group">
+                                <label>Voltage:</label>
+                                <select value={voltage} onChange={(e) => setVoltage(e.target.value)}>
+                                    <option value="220V">220V (Standard)</option>
+                                    <option value="110V">110V</option>
+                                    <option value="12V">12V DC</option>
+                                    <option value="5V">5V DC</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-row">
+                            <div className="form-group full-width">
+                                <label>Location:</label>
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Under Desk" />
+                            </div>
+                        </div>
+                        <div className="form-group full-width">
+                            <label>Description:</label>
+                            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Power strip for main PC setup..." rows={2} />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-submit">Add Component</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 }
 
 export function EditApplicationModal({ isOpen, onClose, app, onSave, onDelete }: EditApplicationModalProps) {

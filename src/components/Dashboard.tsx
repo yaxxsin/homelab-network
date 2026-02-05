@@ -31,6 +31,7 @@ export default function Dashboard() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newProjectName, setNewProjectName] = useState('');
     const [newProjectDesc, setNewProjectDesc] = useState('');
+    const [newProjectType, setNewProjectType] = useState<'network' | 'electrical'>('network');
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     const [serverStats, setServerStats] = useState<any>(null);
     const [isFetchingStats, setIsFetchingStats] = useState(false);
@@ -75,9 +76,10 @@ export default function Dashboard() {
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
-        createProject(newProjectName, newProjectDesc);
+        createProject(newProjectName, newProjectType, newProjectDesc);
         setNewProjectName('');
         setNewProjectDesc('');
+        setNewProjectType('network');
         setIsCreateModalOpen(false);
     };
 
@@ -157,8 +159,8 @@ export default function Dashboard() {
                             {filteredProjects.map((project) => (
                                 <div key={project.id} className="project-card" onClick={() => selectProject(project.id)}>
                                     <div className="project-card-header">
-                                        <div className="project-icon">
-                                            <Network size={20} />
+                                        <div className="project-icon" title={project.type === 'electrical' ? 'Electrical Topology' : 'Network Topology'}>
+                                            {project.type === 'electrical' ? <Activity size={20} className="text-amber-400" /> : <Network size={20} />}
                                         </div>
                                         <button
                                             className="btn-delete-project"
@@ -222,9 +224,30 @@ export default function Dashboard() {
                                 <textarea
                                     value={newProjectDesc}
                                     onChange={(e) => setNewProjectDesc(e.target.value)}
-                                    placeholder="Brief description of your network topology..."
-                                    rows={3}
+                                    placeholder="Brief description of your project..."
+                                    rows={2}
                                 />
+                            </div>
+                            <div className="form-group">
+                                <label>Project Type</label>
+                                <div className="type-selector-grid">
+                                    <button
+                                        type="button"
+                                        className={`type-option ${newProjectType === 'network' ? 'active' : ''}`}
+                                        onClick={() => setNewProjectType('network')}
+                                    >
+                                        <Network size={24} />
+                                        <span>Network Topology</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`type-option ${newProjectType === 'electrical' ? 'active' : ''}`}
+                                        onClick={() => setNewProjectType('electrical')}
+                                    >
+                                        <Activity size={24} />
+                                        <span>Electrical Topology</span>
+                                    </button>
+                                </div>
                             </div>
                             <div className="modal-actions">
                                 <button type="button" className="btn-secondary" onClick={() => setIsCreateModalOpen(false)}>
