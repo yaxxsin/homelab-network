@@ -76,15 +76,7 @@ export interface HardwareNodeData extends Record<string, unknown> {
     storage?: string;
     // Electrical specific
     electricalPorts?: ElectricalPort[];
-    voltage?: string;
-    wattage?: string;
     current?: string;
-    // Excalidraw-like Sketch properties
-    roughness?: number;
-    fillStyle?: 'hachure' | 'solid' | 'zigzag' | 'cross-hatch' | 'dots' | 'dashed';
-    strokeWidth?: number;
-    strokeStyle?: 'solid' | 'dashed' | 'dotted';
-    opacity?: number;
 }
 
 export type HardwareNode = Node<HardwareNodeData, 'hardware' | 'electrical' | 'shape'>;
