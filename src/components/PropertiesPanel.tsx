@@ -455,6 +455,87 @@ export default function PropertiesPanel() {
                     </div>
                 )}
 
+                {/* Shape Properties */}
+                {selectedNode.data.hardwareType === 'shape' && (
+                    <div className="form-group border-t border-slate-700/50 pt-4 mt-2">
+                        <label className="text-indigo-400 font-bold text-xs tracking-wider uppercase">Shape Properties</label>
+
+                        <div className="form-group mt-3">
+                            <label>Shape Type</label>
+                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                <button
+                                    className={`btn-selector ${selectedNode.data.shapeType === 'rectangle' ? 'active' : ''}`}
+                                    onClick={() => updateNode(selectedNode.id, { shapeType: 'rectangle' })}
+                                >Rectangle</button>
+                                <button
+                                    className={`btn-selector ${selectedNode.data.shapeType === 'circle' ? 'active' : ''}`}
+                                    onClick={() => updateNode(selectedNode.id, { shapeType: 'circle' })}
+                                >Circle</button>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Sketchiness (Roughness): {selectedNode.data.roughness || 1}</label>
+                            <input
+                                type="range" min="0" max="5" step="0.5"
+                                value={selectedNode.data.roughness || 1}
+                                onChange={(e) => updateNode(selectedNode.id, { roughness: parseFloat(e.target.value) })}
+                                className="w-full accent-indigo-500"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Fill Style</label>
+                            <select
+                                value={selectedNode.data.fillStyle || 'hachure'}
+                                onChange={(e) => updateNode(selectedNode.id, { fillStyle: e.target.value as any })}
+                                className="w-full bg-slate-800 border-slate-700 rounded p-1 text-sm text-slate-200"
+                            >
+                                <option value="hachure">Hachure (Sketchy)</option>
+                                <option value="solid">Solid</option>
+                                <option value="zigzag">Zigzag</option>
+                                <option value="cross-hatch">Cross-Hatch</option>
+                                <option value="dots">Dots</option>
+                                <option value="dashed">Dashed</option>
+                            </select>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Stroke Width</label>
+                                <input
+                                    type="number" min="1" max="10"
+                                    value={selectedNode.data.strokeWidth || 2}
+                                    onChange={(e) => updateNode(selectedNode.id, { strokeWidth: parseInt(e.target.value) })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Opacity</label>
+                                <input
+                                    type="range" min="0" max="1" step="0.1"
+                                    value={selectedNode.data.opacity || 1}
+                                    onChange={(e) => updateNode(selectedNode.id, { opacity: parseFloat(e.target.value) })}
+                                    className="accent-indigo-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Colors</label>
+                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-slate-500">Fill</span>
+                                    <input type="color" value={selectedNode.data.backgroundColor || '#cbd5e1'} onChange={(e) => updateNode(selectedNode.id, { backgroundColor: e.target.value })} className="w-full h-8 bg-transparent" />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] text-slate-500">Stroke</span>
+                                    <input type="color" value={selectedNode.data.borderColor || '#64748b'} onChange={(e) => updateNode(selectedNode.id, { borderColor: e.target.value })} className="w-full h-8 bg-transparent" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Custom Details CRUD */}
                 <div className="form-group border-t border-slate-700/50 pt-4 mt-2">
                     <div className="section-header">
