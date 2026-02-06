@@ -76,6 +76,8 @@ export interface HardwareNodeData extends Record<string, unknown> {
     storage?: string;
     // Electrical specific
     electricalPorts?: ElectricalPort[];
+    voltage?: string;
+    wattage?: string;
     current?: string;
 }
 

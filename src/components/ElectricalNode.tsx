@@ -168,8 +168,8 @@ function ElectricalNode({ id, data, selected }: NodeProps<ElectricalNodeType>) {
                     {nodeData.wattage && <span className="node-ip">{nodeData.wattage}W</span>}
                 </div>
 
-                <div className={`status-pill ${(nodeData.status as any) || 'unknown'}`}>
-                    {(nodeData.status as any)?.toUpperCase() || 'UNKNOWN'}
+                <div className={`status-pill ${(nodeData.status as string) || 'unknown'}`}>
+                    {String(nodeData.status || 'UNKNOWN').toUpperCase()}
                 </div>
             </div>
 
